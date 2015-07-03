@@ -1,15 +1,14 @@
 package de.ulb.marc2geo.core;
 
-import java.util.Date;
-
 public class MapRecord {
 
 	private String uri;
+	private String id;
 	private String title;
 	private String scale;
 	private String geometry;
 	private String image;
-	private Date year;
+	private String year;
 	private String description;
 
 	public MapRecord() {
@@ -58,11 +57,11 @@ public class MapRecord {
 		this.image = image;
 	}
 	
-	public Date getYear() {
+	public String getYear() {
 		return year;
 	}
 	
-	public void setYear(Date year) {
+	public void setYear(String year) {
 		this.year = year;
 	}
 	
@@ -74,6 +73,16 @@ public class MapRecord {
 		this.description = description;
 	}
 
+	public String getId() {
+		
+		return id;
+		
+	}
 
+	public void setId(String id) {
+	
+		this.id = id;
+		
+	}
 
 }
