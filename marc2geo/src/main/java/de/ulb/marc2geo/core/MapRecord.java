@@ -5,11 +5,12 @@ public class MapRecord {
 	private String uri;
 	private String id;
 	private String title;
-	private String scale;
+	private String size;
 	private String geometry;
 	private String image;
 	private String year;
 	private String description;
+	private String scale;
 
 	public MapRecord() {
 		
@@ -33,12 +34,12 @@ public class MapRecord {
 		this.title = title;
 	}
 	
-	public String getScale() {
-		return scale;
+	public String getMapSize() {
+		return size;
 	}
 	
-	public void setScale(String scale) {
-		this.scale = scale;
+	public void setMapSize(String scale) {
+		this.size = scale;
 	}
 	
 	public String getGeometry() {
@@ -84,5 +85,15 @@ public class MapRecord {
 		this.id = id;
 		
 	}
+
+	public String getScale() {
+		return scale;
+	}
+
+	public void setScale(String scale) {
+		this.scale = scale;
+	}
+	
+	
 
 }

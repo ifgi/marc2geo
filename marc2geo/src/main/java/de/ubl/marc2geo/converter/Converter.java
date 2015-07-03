@@ -19,10 +19,11 @@ public class Converter {
 			System.out.println("Map Title: "+ maps.get(i).getTitle());
 			System.out.println("Description: "+ maps.get(i).getDescription());
 			System.out.println("Year: "+ maps.get(i).getYear());
-			System.out.println("Scale: "+ maps.get(i).getScale());
+			System.out.println("Size: "+ maps.get(i).getMapSize());
 			System.out.println("Geometry: "+ maps.get(i).getGeometry());
 			System.out.println("Map Image: "+ maps.get(i).getImage());
 			
+			System.out.println(loader.getSPARQLInsert(maps.get(i)));
 			System.out.println("\n");
 		}
 	}

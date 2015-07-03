@@ -25,7 +25,7 @@ public class GlobalSettings {
 		
 	}
 	
-	public static String getGraphURI(){
+	public static String getGraphBaseURI(){
 		
 		return baseGraphURI;
 		
