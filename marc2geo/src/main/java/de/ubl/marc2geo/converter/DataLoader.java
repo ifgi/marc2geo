@@ -56,13 +56,7 @@ public class DataLoader {
 
 			while (data.next()) {
 
-				MapRecord map = new MapRecord();
-
-				map = parseMAR21(data.getString("rawxml"));
-
-				//map.setTitle(data.getString("title"));
-				//map.setGeometry(data.getString("rawxml"));			
-
+				MapRecord map = this.parseMARC21(data.getString("rawxml"));
 				result.add(map);
 
 			}
@@ -76,7 +70,7 @@ public class DataLoader {
 	}
 
 
-	private MapRecord parseMAR21(String marc21) {
+	private MapRecord parseMARC21(String marc21) {
 
 		MapRecord result = new MapRecord();
 
@@ -86,6 +80,7 @@ public class DataLoader {
 		- Map URI
 		- Map title
 		- Map scale
+		- Map size
 		- Map geometry 
 		- Map image
 		- Map year
