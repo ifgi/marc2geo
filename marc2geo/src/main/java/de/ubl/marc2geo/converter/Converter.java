@@ -15,7 +15,10 @@ public class Converter {
 		for (int i = 0; i < maps.size(); i++) {
 			
 			System.out.println("Map Title: "+maps.get(i).getTitle());
+			System.out.println("Description: "+maps.get(i).getDescription());
+			System.out.println("Scale: "+maps.get(i).getScale());
 			
+			System.out.println("\n");
 		}
 	}
 }
