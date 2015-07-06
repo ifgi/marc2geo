@@ -59,9 +59,13 @@ public class DataLoader {
 
 	public ArrayList<MapRecord> getMaps(){
 
+		
+		logger.info("\n\nStarting conversion... \n");
+		
 		ArrayList<MapRecord> result = new ArrayList<MapRecord>();
 		ResultSet data = this.loadData();
-
+		
+		double start = System.currentTimeMillis();
 
 		try {
 
@@ -69,14 +73,26 @@ public class DataLoader {
 
 				MapRecord map = this.parseMARC21(data.getString("rawxml"));
 
-				if(map.getYear() != null){
+				if(map.getYear() != null && 
+				   map.getTitle() != null &&
+				   map.getGeometry() != null){
 
+					logger.info("Storing map " + map.getId() + " \"" + map.getTitle() + "\" ...");
 					result.add(map);
-
+					
+					
+				} else {
+					
+					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map won't be stored.");
 				}
 
-
 			}
+			
+			double end = (System.currentTimeMillis() - start);			
+			double milliseconds = end / 1000;
+			int minutes = (int) milliseconds / 60;
+		    
+			logger.info("\n\nExport finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -90,21 +106,6 @@ public class DataLoader {
 	private MapRecord parseMARC21(String marc21) {
 
 		MapRecord result = new MapRecord();
-
-		/**
-		Required fields:
-
-		- Map URI
-		- Map title
-		- Map scale
-		- Map size
-		- Map geometry 
-		- Map image
-		- Map year
-		- Map description
-
-		 */
-
 
 		try {
 
@@ -131,7 +132,7 @@ public class DataLoader {
 				//String key = currentItem.getAttributes().getNamedItem("code").getNodeValue();			    
 				result.setTitle(currentItem.getTextContent());
 			} else {
-				result.setTitle("No Title");
+				result.setTitle(null);
 			}
 
 			/**
@@ -201,7 +202,7 @@ public class DataLoader {
 				} else {
 
 					result.setGeometry(null);
-					logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no geometry.");
+					logger.warn("No geometry for map " + result.getId() + " \"" + result.getTitle() + "\".");
 
 				}
 
@@ -232,10 +233,10 @@ public class DataLoader {
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
-				result.setYear(currentItem.getTextContent());				
+				result.setYear(currentItem.getTextContent());
 			}else {
 				result.setYear(null);
-				logger.error("Year not found for The map " + result.getId() + " \"" + result.getTitle() + "\"" + ".");
+				logger.error("No year for map " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -250,7 +251,7 @@ public class DataLoader {
 				result.setImage(currentItem.getTextContent());				
 			}else {
 				result.setImage(GlobalSettings.getNoImageURL());
-				logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no image.");
+				logger.warn("No image for map " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -264,7 +265,7 @@ public class DataLoader {
 				result.setPresentation(currentItem.getTextContent());				
 			}else {
 				result.setPresentation(GlobalSettings.getNoPresentationURL());
-				logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no presenatation URL.");
+				logger.warn("No presentation URL for map " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -279,7 +280,7 @@ public class DataLoader {
 				result.setScale(currentItem.getTextContent());				
 			}else {
 				result.setScale("0:0000");
-				logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no scale.");
+				logger.warn("No scale for map " + result.getId() + " \"" + result.getTitle() + "\".");
 			}			
 
 
@@ -332,40 +333,40 @@ public class DataLoader {
 
 		try {
 
-			String body = "update=" + URLEncoder.encode( sparql, "UTF-8" );
+			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
 
 			URL url = new URL( GlobalSettings.getEndpoint() );
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod( "POST" );
-			connection.setDoInput( true );
-			connection.setDoOutput( true );
-			connection.setUseCaches( false );
-			connection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
-			connection.setRequestProperty( "Content-Length", String.valueOf(body.length()) );
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setUseCaches(false);
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
 
 			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
 			writer.write(body);
 			writer.flush();
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-			for ( String line; (line = reader.readLine()) != null;)
-			{
-				System.out.println(line);
-			}
+//
+//			for ( String line; (line = reader.readLine()) != null;)
+//			{
+//				System.out.println(line);
+//			}
 
 			writer.close();
 			reader.close();
 
 		} catch (UnsupportedEncodingException e) {
-			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
 			e.printStackTrace();
+			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
 		} catch (MalformedURLException e) {			
 			e.printStackTrace();
 			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());
 		} catch (IOException e) {
-			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());
 			e.printStackTrace();
+			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());			
 		}
 
 	}
