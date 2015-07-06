@@ -307,16 +307,16 @@ public class DataLoader {
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> '" + map.getMapSize() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> '" + map.getTitle() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> _:TIME_" + map.getId() + " . \n" ;
-		SPARQLinsert = SPARQLinsert + "           _:TIME_" + map.getId() + " a <http://www.w3.org/2006/time#Instant> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           _:TIME_" + map.getId() + " <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
+		SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> a <http://www.w3.org/2006/time#Instant> . \n" ;
+		SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
 
 		if(map.getGeometry() != null){
 
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> _:GEOMETRY_" + map.getId() + " .\n";
-			SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-			SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/sf#wktLiteral> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/sf#wktLiteral> . \n" ;
 
 		}
 
@@ -331,8 +331,8 @@ public class DataLoader {
 	void storeTriples(String sparql){
 
 		try {
-			String body = "update=" + URLEncoder.encode( sparql, "UTF-8" );
 
+			String body = "update=" + URLEncoder.encode( sparql, "UTF-8" );
 
 			URL url = new URL( GlobalSettings.getEndpoint() );
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -340,31 +340,31 @@ public class DataLoader {
 			connection.setDoInput( true );
 			connection.setDoOutput( true );
 			connection.setUseCaches( false );
-			connection.setRequestProperty( "Content-Type",
-					"application/x-www-form-urlencoded" );
+			connection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
 			connection.setRequestProperty( "Content-Length", String.valueOf(body.length()) );
 
-			OutputStreamWriter writer = new OutputStreamWriter( connection.getOutputStream() );
-			writer.write( body );
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			writer.write(body);
 			writer.flush();
 
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(connection.getInputStream()) );
-
-			for ( String line; (line = reader.readLine()) != null; )
+			for ( String line; (line = reader.readLine()) != null;)
 			{
-				System.out.println( line );
+				System.out.println(line);
 			}
 
 			writer.close();
 			reader.close();
 
 		} catch (UnsupportedEncodingException e) {
+			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
 			e.printStackTrace();
-		} catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {			
 			e.printStackTrace();
+			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());
 		} catch (IOException e) {
+			logger.fatal("Error storing triples at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());
 			e.printStackTrace();
 		}
 
