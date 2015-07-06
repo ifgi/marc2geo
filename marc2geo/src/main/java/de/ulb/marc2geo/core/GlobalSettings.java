@@ -11,6 +11,15 @@ public class GlobalSettings {
 	private static String baseGraphURI = "http://ulb.uni-muenster.de/context/karten/";
 	private static String updateEndpoint = "http://giv-lodum.uni-muenster.de:8081/parliament/sparql";
 	private static String noImageURL = "https://upload.wikimedia.org/wikipedia/de/d/d6/KeinBildVorhanden.jpg";
+	private static String noPresenationURL = "https://en.wikipedia.org/wiki/HTTP_404";
+	
+
+	public static String getNoPresentationURL() {
+
+		return noPresenationURL;
+		
+	}
+
 	
 	public static String getBaseURI() {
 

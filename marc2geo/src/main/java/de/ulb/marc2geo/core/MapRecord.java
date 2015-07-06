@@ -8,6 +8,7 @@ public class MapRecord {
 	private String size;
 	private String geometry;
 	private String image;
+	private String presentation;
 	private String year;
 	private String description;
 	private String scale;
@@ -18,6 +19,17 @@ public class MapRecord {
 		
 	}
 	
+	
+	public String getPresentation() {
+		return presentation;
+	}
+
+
+	public void setPresentation(String presentation) {
+		this.presentation = presentation;
+	}
+
+
 	public String getUri() {
 		return uri;
 	}
