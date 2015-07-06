@@ -22,9 +22,12 @@ import org.xml.sax.SAXException;
 import de.ulb.marc2geo.core.GlobalSettings;
 import de.ulb.marc2geo.core.MapRecord;
 import de.ulb.marc2geo.infrastructure.MySQLConnector;
+import org.apache.log4j.Logger;
 
 public class DataLoader {
 
+	private static Logger logger = Logger.getLogger("DataLoader");
+	
 	private ResultSet loadData(){
 
 		Statement statement = null;
@@ -100,6 +103,8 @@ public class DataLoader {
 			XPathFactory xPathfactory = XPathFactory.newInstance();
 			XPath xpath = xPathfactory.newXPath();
 
+			
+			
 
 			/**
 			 * Map Title
@@ -115,6 +120,21 @@ public class DataLoader {
 				result.setTitle("No Title");
 			}
 
+			
+			/**
+			 * Map ID
+			 */
+			expr = xpath.compile("//record/controlfield[@tag='001']");
+			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+
+			if(nl.getLength()!=0){
+				Node currentItem = nl.item(0);		    
+				result.setId(currentItem.getTextContent());
+			} else {
+				result.setId("No ID");
+			}
+			
+			
 			/**
 			 * Map URI
 			 */
@@ -128,18 +148,6 @@ public class DataLoader {
 				result.setUri("No URI");
 			}
 
-			/**
-			 * Map ID
-			 */
-			expr = xpath.compile("//record/controlfield[@tag='001']");
-			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-
-			if(nl.getLength()!=0){
-				Node currentItem = nl.item(0);		    
-				result.setId(currentItem.getTextContent());
-			} else {
-				result.setId("No ID");
-			}
 
 			/**
 			 * Map Description
@@ -180,7 +188,9 @@ public class DataLoader {
 					
 				} else {
 					
-					result.setGeometry("Invalid Coordinates");
+					result.setGeometry("invalid");
+					logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no geometry.");
+					
 				}
 
 				
@@ -227,6 +237,7 @@ public class DataLoader {
 				result.setImage(currentItem.getTextContent());				
 			}else {
 				result.setImage(GlobalSettings.getNoImageURL());
+				logger.warn("The map " + result.getId() + " \"" + result.getTitle() + "\"" + " has no image.");
 			}
 
 			
@@ -272,9 +283,14 @@ public class DataLoader {
 			   SPARQLinsert = SPARQLinsert + "           _:TIME_" + map.getId() + " a <http://www.w3.org/2006/time#Instant> . \n" ;
 			   SPARQLinsert = SPARQLinsert + "           _:TIME_" + map.getId() + " <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
 			   SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
-			   SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> _:GEOMETRY_" + map.getId() + " .\n";
-			   SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-			   SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/sf#wktLiteral> . \n" ;
+			   
+			   if(!map.getGeometry().toUpperCase().equals(("INVALID"))){
+				   
+				   SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> _:GEOMETRY_" + map.getId() + " .\n";
+				   SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+				   SPARQLinsert = SPARQLinsert + "           _:GEOMETRY_" + map.getId() + " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/sf#wktLiteral> . \n" ;
+				   
+			   }
 			   SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> '" + map.getDescription() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 			   SPARQLinsert = SPARQLinsert + "    } \n" ;
 			   SPARQLinsert = SPARQLinsert + "} \n" ;

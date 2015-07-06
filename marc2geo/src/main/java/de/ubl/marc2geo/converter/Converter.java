@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import de.ulb.marc2geo.core.MapRecord;
 
 public class Converter {
+	
 
 	public static void main(String[] args) {
 		
@@ -14,7 +15,7 @@ public class Converter {
 		
 		for (int i = 0; i < maps.size(); i++) {
 			
-			System.out.println("Map URI: "+ maps.get(i).getUri());
+			System.out.println("\nMap URI: "+ maps.get(i).getUri());
 			System.out.println("Map ID: "+ maps.get(i).getId());
 			System.out.println("Map Title: "+ maps.get(i).getTitle());
 			System.out.println("Description: "+ maps.get(i).getDescription());
