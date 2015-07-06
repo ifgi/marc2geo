@@ -27,6 +27,8 @@ public class Converter {
 			System.out.println("Map Presentation: "+ maps.get(i).getPresentation());
 			
 			System.out.println(loader.getSPARQLInsert(maps.get(i)));
+			loader.storeTriples(loader.getSPARQLInsert(maps.get(i)));
+			
 			System.out.println("\n");
 		}
 	}
