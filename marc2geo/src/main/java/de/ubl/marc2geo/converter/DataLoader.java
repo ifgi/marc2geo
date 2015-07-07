@@ -48,7 +48,7 @@ public class DataLoader {
 			result = statement.executeQuery("SELECT * FROM transfer.KATALOG");
 
 		} catch (SQLException e) {
-
+			e.printStackTrace();
 			e.printStackTrace();
 		}
 
@@ -66,7 +66,9 @@ public class DataLoader {
 		ResultSet data = this.loadData();
 		
 		double start = System.currentTimeMillis();
-
+		long valid = 0;
+		long invalid = 0;
+		
 		try {
 
 			while (data.next()) {
@@ -75,15 +77,19 @@ public class DataLoader {
 
 				if(map.getYear() != null && 
 				   map.getTitle() != null &&
-				   map.getGeometry() != null){
+				   map.getGeometry() != null &&
+				   map.getId() != null &&
+				   map.getUri() != null ){
 
 					logger.info("Storing map " + map.getId() + " \"" + map.getTitle() + "\" ...");
 					result.add(map);
+					valid++;
 					
 					
 				} else {
 					
 					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map won't be stored.");
+					invalid++;
 				}
 
 			}
@@ -92,7 +98,8 @@ public class DataLoader {
 			double milliseconds = end / 1000;
 			int minutes = (int) milliseconds / 60;
 		    
-			logger.info("\n\nExport finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
+			
+			logger.info("\n\nValid Records: " + valid + "\nInvalid Records: " + invalid + "\nExport finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -128,11 +135,11 @@ public class DataLoader {
 			NodeList nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
-				Node currentItem = nl.item(0);
-				//String key = currentItem.getAttributes().getNamedItem("code").getNodeValue();			    
+				Node currentItem = nl.item(0);	    
 				result.setTitle(currentItem.getTextContent());
 			} else {
 				result.setTitle(null);
+				logger.error("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -145,7 +152,8 @@ public class DataLoader {
 				Node currentItem = nl.item(0);		    
 				result.setId(currentItem.getTextContent());
 			} else {
-				result.setId("No ID");
+				result.setId(null);
+				logger.error("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -159,7 +167,8 @@ public class DataLoader {
 				Node currentItem = nl.item(0);		    
 				result.setUri(GlobalSettings.getBaseURI() + currentItem.getTextContent().replace("(", "").replace(")",""));
 			} else {
-				result.setUri("No URI");
+				result.setUri(null);
+				logger.error("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -172,7 +181,8 @@ public class DataLoader {
 				Node currentItem = nl.item(0);
 				result.setDescription(currentItem.getTextContent());
 			} else {
-				result.setDescription("No Description");
+				result.setDescription("");
+				logger.warn("No description for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -202,14 +212,17 @@ public class DataLoader {
 				} else {
 
 					result.setGeometry(null);
-					logger.warn("No geometry for map " + result.getId() + " \"" + result.getTitle() + "\".");
+					logger.error("Unexpected coordintates format for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 
 				}
 
 
 
 			} else {
-				result.setGeometry("No Geometry");
+
+				result.setGeometry(null);
+				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+
 			}
 
 			/**
@@ -222,7 +235,8 @@ public class DataLoader {
 				Node currentItem = nl.item(0);
 				result.setMapSize(currentItem.getTextContent());				
 			}else {
-				result.setMapSize("Size not found.");
+				result.setMapSize("");
+				logger.warn("No map size for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -236,7 +250,7 @@ public class DataLoader {
 				result.setYear(currentItem.getTextContent());
 			}else {
 				result.setYear(null);
-				logger.error("No year for map " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -251,7 +265,7 @@ public class DataLoader {
 				result.setImage(currentItem.getTextContent());				
 			}else {
 				result.setImage(GlobalSettings.getNoImageURL());
-				logger.warn("No image for map " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No image for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -265,7 +279,7 @@ public class DataLoader {
 				result.setPresentation(currentItem.getTextContent());				
 			}else {
 				result.setPresentation(GlobalSettings.getNoPresentationURL());
-				logger.warn("No presentation URL for map " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -280,7 +294,7 @@ public class DataLoader {
 				result.setScale(currentItem.getTextContent());				
 			}else {
 				result.setScale("0:0000");
-				logger.warn("No scale for map " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}			
 
 
