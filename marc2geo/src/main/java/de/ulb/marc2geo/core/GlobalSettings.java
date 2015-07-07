@@ -9,12 +9,19 @@ public class GlobalSettings {
 
 	private static String baseResourceURI = "http://lobid.org/resource/";
 	private static String baseGraphURI = "http://ulb.uni-muenster.de/context/karten/";
-	private static String updateEndpoint = "http://localhost:8083/parliament/sparql";
+	private static String updateEndpoint = "http://giv-lodum.uni-muenster.de:8081/parliament/sparql";
 	private static String noImageURL = "https://upload.wikimedia.org/wikipedia/de/d/d6/KeinBildVorhanden.jpg";
 	private static String noPresenationURL = "https://en.wikipedia.org/wiki/HTTP_404";
 	private static String timeBaseURL = "http://ulb.uni-muenster.de/resource/time/";
 	private static String geometryBaseURL = "http://ulb.uni-muenster.de/resource/geometry/";
+	private static String defaultCRS = "http://www.opengis.net/def/crs/EPSG/0/4326";
 
+
+	public static String getCRS() {
+
+		return defaultCRS;
+		
+	}
 	
 	public static String getGeometryURL() {
 

@@ -205,7 +205,7 @@ public class DataLoader {
 					String latitudeNorthWest = hoch.split(" ")[1];
 					String longitudeNorthWest = hoch.split(" ")[0];
 
-					String wkt = "POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))"; 
+					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))"; 
 
 					result.setGeometry(wkt);
 
