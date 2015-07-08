@@ -15,8 +15,36 @@ public class GlobalSettings {
 	private static String timeBaseURL = "http://ulb.uni-muenster.de/resource/time/";
 	private static String geometryBaseURL = "http://ulb.uni-muenster.de/resource/geometry/";
 	private static String defaultCRS = "http://www.opengis.net/def/crs/EPSG/0/4326";
+	private static String databaseHost = "giv-lodum.uni-muenster.de";
+	private static String databaseName = "transfer";
+	private static String databaseUser = "jones";
+	private static String databasePassword = "";
 
+	
+	public static String getDatabaseHost() {
 
+		return databaseHost;
+		
+	}
+	
+	public static String getDatabaseName() {
+
+		return databaseName;
+		
+	}
+	
+	public static String getDatabaseUser() {
+
+		return databaseUser;
+		
+	}
+	
+	public static String getDatabasePassword() {
+
+		return databasePassword;
+		
+	}
+	
 	public static String getCRS() {
 
 		return defaultCRS;

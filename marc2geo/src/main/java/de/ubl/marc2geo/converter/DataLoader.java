@@ -45,11 +45,12 @@ public class DataLoader {
 		try {
 
 			statement =  cnn.getConnection().createStatement();
+			logger.info("Loading data from database...");
 			result = statement.executeQuery("SELECT * FROM transfer.KATALOG");
-
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
-			e.printStackTrace();
+			logger.fatal("Error loading data from " + GlobalSettings.getDatabaseHost() + ":\n" + e.getMessage());
 		}
 
 		return result;
@@ -59,9 +60,6 @@ public class DataLoader {
 
 	public ArrayList<MapRecord> getMaps(){
 
-		
-		logger.info("\n\nStarting conversion... \n");
-		
 		ArrayList<MapRecord> result = new ArrayList<MapRecord>();
 		ResultSet data = this.loadData();
 		
@@ -70,7 +68,7 @@ public class DataLoader {
 		long invalid = 0;
 		
 		try {
-
+								
 			while (data.next()) {
 
 				MapRecord map = this.parseMARC21(data.getString("rawxml"));
