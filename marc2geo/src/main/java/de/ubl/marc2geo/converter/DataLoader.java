@@ -123,9 +123,6 @@ public class DataLoader {
 			XPathFactory xPathfactory = XPathFactory.newInstance();
 			XPath xpath = xPathfactory.newXPath();
 
-
-
-
 			/**
 			 * Map Title
 			 */
@@ -203,14 +200,21 @@ public class DataLoader {
 					String latitudeNorthWest = hoch.split(" ")[1];
 					String longitudeNorthWest = hoch.split(" ")[0];
 
-					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))"; 
-
+//					System.out.println(">>>>>> Rechts "+rechts);
+//					System.out.println(">>>>>> Hoch "+hoch);
+//					
+					
+//					String wkt = "POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))"; 
+					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
+					System.out.println(wkt);
 					result.setGeometry(wkt);
 
+//					System.out.println("POLYGON((" + longitudeSouthEast + " " + latitudeNorthWest  + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + longitudeSouthEast + " "+ latitudeSouthEast +"," + longitudeSouthEast + " " + latitudeNorthWest + "," + longitudeSouthEast + " " + latitudeNorthWest  +  "))");
+					
 				} else {
-
+					
+					logger.error("Unexpected coordintates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
 					result.setGeometry(null);
-					logger.error("Unexpected coordintates format for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 
 				}
 
@@ -218,8 +222,9 @@ public class DataLoader {
 
 			} else {
 
-				result.setGeometry(null);
 				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setGeometry(null);
+				
 
 			}
 
@@ -329,7 +334,7 @@ public class DataLoader {
 
 			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
 			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/sf#wktLiteral> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
 
 		}
 
