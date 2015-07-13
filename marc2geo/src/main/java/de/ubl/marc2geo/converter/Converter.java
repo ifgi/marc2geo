@@ -23,12 +23,14 @@ public class Converter {
 				"Java Runtime: "+ System.getProperty("java.version") + "\n" +
 				"Operating System: " + System.getProperty("os.name").toString() + " " + 
 									   System.getProperty("os.version").toString() + " (" + 
-									   System.getProperty("os.arch").toString()+")\n\nStarting Loader...\n");
+									   System.getProperty("os.arch").toString()+")\n\nStarting Health Check...\n");
 		
 		
 		DataLoader loader = new DataLoader();		
 		ArrayList<MapRecord> maps = new ArrayList<MapRecord>(); 
 		maps = loader.getMaps();
+		
+		logger.info("Storing valid entries to the triple store [" + GlobalSettings.getEndpoint() + "]\n");
 		
 		for (int i = 0; i < maps.size(); i++) {
 			
@@ -44,6 +46,8 @@ public class Converter {
 //			System.out.println("Map Presentation: "+ maps.get(i).getPresentation());
 			
 //			System.out.println(loader.getSPARQLInsert(maps.get(i)));
+			
+			logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" ...");
 			loader.storeTriples(loader.getSPARQLInsert(maps.get(i)));
 			
 //			System.out.println("\n");

@@ -78,15 +78,14 @@ public class DataLoader {
 				   map.getGeometry() != null &&
 				   map.getId() != null &&
 				   map.getUri() != null ){
-
-					logger.info("Storing map " + map.getId() + " \"" + map.getTitle() + "\" ...");
+					
 					result.add(map);
 					valid++;
 					
 					
 				} else {
 					
-					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map won't be stored.");
+					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map is incomplete and therefore won't be stored.");
 					invalid++;
 				}
 
@@ -97,7 +96,7 @@ public class DataLoader {
 			int minutes = (int) milliseconds / 60;
 		    
 			
-			logger.info("\n\nValid Records: " + valid + "\nInvalid Records: " + invalid + "\nExport finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
+			logger.info("\n\nValid Records: " + valid + "\nInvalid Records: " + invalid + "\nHealth Check finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -190,6 +189,10 @@ public class DataLoader {
 
 				Node currentItem = nl.item(0);
 
+				/**
+				 * Coordinates Format: 34 34 Rechts 56 46 Hoch
+				 */
+				
 				if(currentItem.getTextContent().contains("Rechts")){
 
 					String rechts = currentItem.getTextContent().substring(0,currentItem.getTextContent().indexOf("R")).trim();
@@ -200,16 +203,9 @@ public class DataLoader {
 					String latitudeNorthWest = hoch.split(" ")[1];
 					String longitudeNorthWest = hoch.split(" ")[0];
 
-//					System.out.println(">>>>>> Rechts "+rechts);
-//					System.out.println(">>>>>> Hoch "+hoch);
-//					
-					
-//					String wkt = "POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))"; 
 					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
-					System.out.println(wkt);
 					result.setGeometry(wkt);
 
-//					System.out.println("POLYGON((" + longitudeSouthEast + " " + latitudeNorthWest  + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + longitudeSouthEast + " "+ latitudeSouthEast +"," + longitudeSouthEast + " " + latitudeNorthWest + "," + longitudeSouthEast + " " + latitudeNorthWest  +  "))");
 					
 				} else {
 					
@@ -239,7 +235,7 @@ public class DataLoader {
 				result.setMapSize(currentItem.getTextContent());				
 			}else {
 				result.setMapSize("");
-				logger.warn("No map size for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No paper map size for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -274,12 +270,12 @@ public class DataLoader {
 			/**
 			 * Map Presentation
 			 */
-			expr = xpath.compile("//record/datafield[@tag='????']/subfield[@code='????']");
+			expr = xpath.compile("//record/datafield[@tag='856']/subfield[@code='u']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-
+			
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
-				result.setPresentation(currentItem.getTextContent());				
+				result.setPresentation(currentItem.getTextContent());
 			}else {
 				result.setPresentation(GlobalSettings.getNoPresentationURL());
 				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
