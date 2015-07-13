@@ -209,7 +209,7 @@ public class DataLoader {
 					
 				} else {
 					
-					logger.error("Unexpected coordintates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
+					logger.error("Unexpected coordinates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
 					result.setGeometry(null);
 
 				}

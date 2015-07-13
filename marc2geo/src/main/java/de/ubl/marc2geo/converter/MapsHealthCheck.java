@@ -1,7 +1,5 @@
 package de.ubl.marc2geo.converter;
 
-import java.util.ArrayList;
-
 import org.apache.log4j.Logger;
 
 import de.ulb.marc2geo.core.GlobalSettings;
@@ -22,7 +20,7 @@ public class MapsHealthCheck {
 				"Java Runtime: "+ System.getProperty("java.version") + "\n" +
 				"Operating System: " + System.getProperty("os.name").toString() + " " + 
 									   System.getProperty("os.version").toString() + " (" + 
-									   System.getProperty("os.arch").toString()+")\n\nStarting Health Check...\n");
+									   System.getProperty("os.arch").toString()+")\n\nStarting Map Health Check...\n");
 		
 		
 		DataLoader loader = new DataLoader();		
