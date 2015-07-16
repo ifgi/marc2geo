@@ -255,8 +255,9 @@ public class DataLoader {
 
 			/**
 			 * Map Image
+			 * TODO: Change Fake Tag. Currently there is no way to retrieve images from resources!
 			 */
-			expr = xpath.compile("//record/datafield[@tag='????']/subfield[@code='????']");
+			expr = xpath.compile("//record/datafield[@tag='245']/subfield[@code='fakebild']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
