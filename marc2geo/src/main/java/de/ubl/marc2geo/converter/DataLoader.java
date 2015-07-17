@@ -382,7 +382,9 @@ public class DataLoader {
 
 	}
 
-	void storeTriples(String sparql){
+	public void createSpatiotemporalIndexes(MapRecord map){
+
+		String sparql = "INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + map.getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }";
 
 		try {
 
@@ -402,11 +404,43 @@ public class DataLoader {
 			writer.flush();
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			//
-			//			for ( String line; (line = reader.readLine()) != null;)
-			//			{
-			//				System.out.println(line);
-			//			}
+
+			writer.close();
+			reader.close();
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
+		} catch (MalformedURLException e) {			
+			e.printStackTrace();
+			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());			
+		}
+
+	}
+	
+	public void storeTriples(String sparql){
+
+		try {
+
+			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
+
+			URL url = new URL( GlobalSettings.getEndpoint() );
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod( "POST" );
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setUseCaches(false);
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
+
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			writer.write(body);
+			writer.flush();
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 			writer.close();
 			reader.close();

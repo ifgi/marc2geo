@@ -38,6 +38,9 @@ public class Converter {
 			
 			logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" at [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
 			loader.storeTriples(loader.getSPARQLInsert(maps.get(i)));					
+
+			logger.info("Creating temporal and spatial indexes for named graph [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
+			loader.createSpatiotemporalIndexes(maps.get(i));
 			
 		}
 		
