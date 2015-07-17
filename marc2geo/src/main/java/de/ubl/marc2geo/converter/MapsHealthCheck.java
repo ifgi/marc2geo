@@ -26,5 +26,6 @@ public class MapsHealthCheck {
 		DataLoader loader = new DataLoader();		
 		loader.getMaps();
 		
+		
 	}
 }

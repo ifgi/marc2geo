@@ -47,7 +47,7 @@ public class DataLoader {
 			statement =  cnn.getConnection().createStatement();
 			logger.info("Loading data from database...");
 			result = statement.executeQuery("SELECT * FROM transfer.KATALOG");
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			logger.fatal("Error loading data from " + GlobalSettings.getDatabaseHost() + ":\n" + e.getMessage());
@@ -62,13 +62,13 @@ public class DataLoader {
 
 		ArrayList<MapRecord> result = new ArrayList<MapRecord>();
 		ResultSet data = this.loadData();
-		
+
 		double start = System.currentTimeMillis();
 		long valid = 0;
 		long invalid = 0;
-		
+
 		try {
-								
+
 			while (data.next()) {
 
 				MapRecord map = this.parseMARC21(data.getString("rawxml"));
@@ -78,24 +78,24 @@ public class DataLoader {
 				   map.getGeometry() != null &&
 				   map.getId() != null &&
 				   map.getUri() != null ){
-					
+
 					result.add(map);
 					valid++;
-					
-					
+
+
 				} else {
-					
+
 					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map is incomplete and therefore won't be stored.");
 					invalid++;
 				}
 
 			}
-			
+
 			double end = (System.currentTimeMillis() - start);			
 			double milliseconds = end / 1000;
 			int minutes = (int) milliseconds / 60;
-		    
-			
+
+
 			logger.info("\n\nValid Records: " + valid + "\nInvalid Records: " + invalid + "\nHealth Check finished in " + minutes + " minutes and " + (milliseconds -(minutes / 1000)) + " seconds. \n");
 
 		} catch (SQLException e) {
@@ -192,7 +192,7 @@ public class DataLoader {
 				/**
 				 * Coordinates Format: 34 34 Rechts 56 46 Hoch
 				 */
-				
+
 				if(currentItem.getTextContent().contains("Rechts")){
 
 					String rechts = currentItem.getTextContent().substring(0,currentItem.getTextContent().indexOf("R")).trim();
@@ -206,9 +206,9 @@ public class DataLoader {
 					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
 					result.setGeometry(wkt);
 
-					
+
 				} else {
-					
+
 					logger.error("Unexpected coordinates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
 					result.setGeometry(null);
 
@@ -220,7 +220,7 @@ public class DataLoader {
 
 				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 				result.setGeometry(null);
-				
+
 
 			}
 
@@ -273,7 +273,7 @@ public class DataLoader {
 			 */
 			expr = xpath.compile("//record/datafield[@tag='856']/subfield[@code='u']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-			
+
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
 				result.setPresentation(currentItem.getTextContent());
@@ -343,6 +343,45 @@ public class DataLoader {
 
 	}
 
+	public void dropNamedGraph(MapRecord map){
+
+		String sparql = "DROP GRAPH <" + GlobalSettings.getGraphBaseURI() + map.getId() + ">";
+
+		try {
+
+			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
+
+			URL url = new URL( GlobalSettings.getEndpoint() );
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod( "POST" );
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setUseCaches(false);
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
+
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			writer.write(body);
+			writer.flush();
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+			writer.close();
+			reader.close();
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			logger.fatal("Error dropping named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
+		} catch (MalformedURLException e) {			
+			e.printStackTrace();
+			logger.fatal("Error dropping named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.fatal("Error dropping named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getMessage());			
+		}
+
+	}
+
 	void storeTriples(String sparql){
 
 		try {
@@ -363,11 +402,11 @@ public class DataLoader {
 			writer.flush();
 
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//
-//			for ( String line; (line = reader.readLine()) != null;)
-//			{
-//				System.out.println(line);
-//			}
+			//
+			//			for ( String line; (line = reader.readLine()) != null;)
+			//			{
+			//				System.out.println(line);
+			//			}
 
 			writer.close();
 			reader.close();
