@@ -1,7 +1,6 @@
 package de.ubl.marc2geo.converter;
 
 import org.apache.log4j.Logger;
-
 import de.ulb.marc2geo.core.GlobalSettings;
 
 public class MapsHealthCheck {
