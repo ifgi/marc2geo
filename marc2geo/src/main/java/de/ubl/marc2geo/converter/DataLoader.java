@@ -46,7 +46,7 @@ public class DataLoader {
 
 			statement =  cnn.getConnection().createStatement();
 			logger.info("Loading data from database...");
-			result = statement.executeQuery("SELECT * FROM transfer.KATALOG");
+			result = statement.executeQuery("SELECT * FROM transfer.KATALOG2");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -101,9 +101,9 @@ public class DataLoader {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
-
+		
 		return result;
+		
 	}
 
 
@@ -154,7 +154,7 @@ public class DataLoader {
 			/**
 			 * Map URI
 			 */
-			expr = xpath.compile("//record/datafield[@tag='776']/subfield[@code='w']");
+			expr = xpath.compile("//record/datafield[@tag='035']/subfield[@code='a']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
@@ -182,37 +182,49 @@ public class DataLoader {
 			/**
 			 * Map Geometry
 			 */
-			expr = xpath.compile("//record/datafield[@tag='245']/subfield[@code='n']");
+			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='a']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
 
 				Node currentItem = nl.item(0);
+				
+//				System.out.println(">>>>" + currentItem.getTextContent());	
+				String coordinates = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("(")+1,currentItem.getTextContent().indexOf(")")).trim(); 
+				
+				double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.trim().split(" ")[2]);
+				double west = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
+				double north = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[8]);
+				double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
 
-				/**
-				 * Coordinates Format: 34 34 Rechts 56 46 Hoch
-				 */
-
-				if(currentItem.getTextContent().contains("Rechts")){
-
-					String rechts = currentItem.getTextContent().substring(0,currentItem.getTextContent().indexOf("R")).trim();
-					String latitudeSouthEast = rechts.split(" ")[1];
-					String longitudeSouthEast = rechts.split(" ")[0];
-
-					String hoch = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("s")+1,currentItem.getTextContent().indexOf("H")).trim();
-					String latitudeNorthWest = hoch.split(" ")[1];
-					String longitudeNorthWest = hoch.split(" ")[0];
-
-					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
-					result.setGeometry(wkt);
-
-
-				} else {
-
-					logger.error("Unexpected coordinates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
-					result.setGeometry(null);
-
-				}
+				String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + "))"; 
+				result.setGeometry(wkt);
+				logger.info("WKT Geometry created for map: " + result.getId() + " " +  wkt);
+				
+//				/**
+//				 * Coordinates Format: 34 34 Rechts 56 46 Hoch  :-P
+//				 */
+//
+//				if(currentItem.getTextContent().contains("Rechts")){
+//
+//					String rechts = currentItem.getTextContent().substring(0,currentItem.getTextContent().indexOf("R")).trim();
+//					String latitudeSouthEast = rechts.split(" ")[1];
+//					String longitudeSouthEast = rechts.split(" ")[0];
+//
+//					String hoch = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("s")+1,currentItem.getTextContent().indexOf("H")).trim();
+//					String latitudeNorthWest = hoch.split(" ")[1];
+//					String longitudeNorthWest = hoch.split(" ")[0];
+//
+//					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
+//					result.setGeometry(wkt);
+//
+//
+//				} else {
+//
+//					logger.error("Unexpected coordinates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
+//					result.setGeometry(null);
+//
+//				}
 
 
 
@@ -227,7 +239,7 @@ public class DataLoader {
 			/**
 			 * Map Size
 			 */
-			expr = xpath.compile("//record/datafield[@tag='300']/subfield[@code='c']");
+			expr = xpath.compile("//record/datafield[@tag='300']/subfield[@code='b']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
@@ -271,12 +283,15 @@ public class DataLoader {
 			/**
 			 * Map Presentation
 			 */
-			expr = xpath.compile("//record/datafield[@tag='856']/subfield[@code='u']");
+			expr = xpath.compile("//record/datafield[@tag='035']/subfield[@code='a']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
-				result.setPresentation(currentItem.getTextContent());
+				String id = currentItem.getTextContent();
+				
+				id = id.substring(id.indexOf(")")+1, id.length());
+				result.setPresentation(GlobalSettings.getBaseURI() +  id);
 			}else {
 				result.setPresentation(GlobalSettings.getNoPresentationURL());
 				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
@@ -286,12 +301,30 @@ public class DataLoader {
 			/**
 			 * Map Scale
 			 */
-			expr = xpath.compile("//record/datafield[@tag='????']/subfield[@code='????']");
+			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='a']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
+				
 				Node currentItem = nl.item(0);
-				result.setScale(currentItem.getTextContent());				
+
+				String scale = currentItem.getTextContent();
+				
+				if(scale.substring(0, scale.indexOf("(")).trim().length()!=0){
+				
+					scale = scale.replace(";", "");
+					scale = scale.substring(0, scale.indexOf("(")).trim();
+					result.setScale(scale);
+					
+				} else {
+					
+					result.setScale("0:0000");
+					logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				}
+				
+				
+				
+				
 			}else {
 				result.setScale("0:0000");
 				logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
@@ -311,7 +344,30 @@ public class DataLoader {
 		return result;
 	}
 
-
+	/**
+	 * 
+	 * @param bbox -> "1:50.000 ; (E 016 05 -E 016 20 /N 047 45 -N 047 30)"  
+	 * @return wkt -> "POLYGON(16.2 47.45, 16.05 47.45, 16.05 47.3, 16.2 47.3, 16.2 47.45)"
+	 */	
+	public String getWKTPolygon(String bbox){
+					
+		String coordinates = bbox.substring(bbox.indexOf("(")+1,bbox.indexOf(")")); 
+		
+		double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.split(" ")[2]);
+		double west = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
+		double north = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[8]);
+		double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
+		
+		String wkt = "POLYGON(" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + ")"; 
+		
+		return wkt;
+	}	
+	
+	/**
+	 * 
+	 * @param map
+	 * @return SPARQL insert statement.
+	 */
 	public String getSPARQLInsert(MapRecord map){
 
 		String SPARQLinsert = "\nINSERT DATA {\n " ;
