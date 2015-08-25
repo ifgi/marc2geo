@@ -18,7 +18,7 @@ public class GlobalSettings {
 	private static String databaseHost = "giv-lodum.uni-muenster.de";
 	private static String databaseName = "transfer";
 	private static String databaseUser = "jones";
-	private static String databasePassword = "passwort";
+	private static String databasePassword = "";
 
 	
 	public static String getDatabaseHost() {
