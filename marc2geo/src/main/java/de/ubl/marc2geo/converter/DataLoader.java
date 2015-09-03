@@ -323,8 +323,6 @@ public class DataLoader {
 				}
 				
 				
-				
-				
 			}else {
 				result.setScale("0:0000");
 				logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
