@@ -32,9 +32,9 @@ import de.ulb.marc2geo.core.MapRecord;
 import de.ulb.marc2geo.infrastructure.MySQLConnector;
 import org.apache.log4j.Logger;
 
-public class DataLoader {
+public class DataLoaderGoettingen {
 
-	private static Logger logger = Logger.getLogger("DataLoader");
+	private static Logger logger = Logger.getLogger("DataLoader-Göttingen");
 
 	private ResultSet loadData(){
 
@@ -46,7 +46,8 @@ public class DataLoader {
 
 			statement =  cnn.getConnection().createStatement();
 			logger.info("Loading data from database...");
-			result = statement.executeQuery("SELECT * FROM transfer.KATALOG2");
+			//result = statement.executeQuery("SELECT * FROM transfer.KATALOG2");
+			result = statement.executeQuery("SELECT * FROM transfer.goettingen");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -71,7 +72,7 @@ public class DataLoader {
 
 			while (data.next()) {
 
-				MapRecord map = this.parseMARC21(data.getString("rawxml"));
+				MapRecord map = this.parseMARC21(data.getString("xml"));
 
 				if(map.getYear() != null && 
 				   map.getTitle() != null &&
@@ -182,51 +183,57 @@ public class DataLoader {
 			/**
 			 * Map Geometry
 			 */
-			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='a']");
+			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
+			String coordinates="";
 			if(nl.getLength()!=0){
 
+				try {
+					
 				Node currentItem = nl.item(0);
+				coordinates = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("(")+1,currentItem.getTextContent().indexOf(")")).trim(); 
 				
-//				System.out.println(">>>>" + currentItem.getTextContent());	
-				String coordinates = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("(")+1,currentItem.getTextContent().indexOf(")")).trim(); 
+				double east = 0.0;
+				double west = 0.0;
+				double north = 0.0;
+				double south = 0.0;
 				
-				double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.trim().split(" ")[2]);
-				double west = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
-				double north = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[8]);
-				double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
+				if(coordinates.contains("E") && coordinates.contains("N")){
 
+					coordinates = coordinates.replace("--", "");
+					coordinates = coordinates.replace("E", "");
+					coordinates = coordinates.replace("/N", "");
+					coordinates = coordinates.replace("N", "").trim();
+									
+					east = Double.parseDouble(coordinates.split(" ")[0] + "." + coordinates.trim().split(" ")[1]);
+					west = Double.parseDouble(coordinates.split(" ")[2] + "." + coordinates.split(" ")[3]);
+					north = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
+					south = Double.parseDouble(coordinates.split(" ")[6] + "." + coordinates.split(" ")[7]);
+
+				} else if(coordinates.contains("W") && coordinates.contains("S")){
+
+					coordinates = coordinates.replace("--", "");
+					coordinates = coordinates.replace("W", "");
+					coordinates = coordinates.replace("/S", "");
+					coordinates = coordinates.replace("S", "").trim();
+										
+					east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.trim().split(" ")[0]);
+					west = Double.parseDouble(coordinates.split(" ")[3] + "." + coordinates.split(" ")[2]);
+					north = Double.parseDouble(coordinates.split(" ")[5] + "." + coordinates.split(" ")[4]);
+					south = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[6]);
+					
+				}
+				
+				
 				String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + "))"; 
 				result.setGeometry(wkt);
 				logger.info("WKT Geometry created for map: " + result.getId() + " " +  wkt);
 				
-//				/**
-//				 * Coordinates Format: 34 34 Rechts 56 46 Hoch  :-P
-//				 */
-//
-//				if(currentItem.getTextContent().contains("Rechts")){
-//
-//					String rechts = currentItem.getTextContent().substring(0,currentItem.getTextContent().indexOf("R")).trim();
-//					String latitudeSouthEast = rechts.split(" ")[1];
-//					String longitudeSouthEast = rechts.split(" ")[0];
-//
-//					String hoch = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("s")+1,currentItem.getTextContent().indexOf("H")).trim();
-//					String latitudeNorthWest = hoch.split(" ")[1];
-//					String longitudeNorthWest = hoch.split(" ")[0];
-//
-//					String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + hoch + "," + longitudeNorthWest + " " + latitudeSouthEast + "," + rechts + "," + longitudeSouthEast + " " + latitudeNorthWest + "," + hoch + "))";
-//					result.setGeometry(wkt);
-//
-//
-//				} else {
-//
-//					logger.error("Unexpected coordinates format for map: " + result.getId() + " \"" + result.getTitle() + "\" > " + currentItem.getTextContent());
-//					result.setGeometry(null);
-//
-//				}
-
-
+				} catch (Exception e) {
+					logger.error("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+					result.setGeometry(null);
+				}
 
 			} else {
 
@@ -239,7 +246,7 @@ public class DataLoader {
 			/**
 			 * Map Size
 			 */
-			expr = xpath.compile("//record/datafield[@tag='300']/subfield[@code='b']");
+			expr = xpath.compile("//record/datafield[@tag='300']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
@@ -256,15 +263,22 @@ public class DataLoader {
 			expr = xpath.compile("//record/datafield[@tag='260']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
-			if(nl.getLength()!=0){
-				Node currentItem = nl.item(0);
-				result.setYear(currentItem.getTextContent());
-			}else {
+			try {
+			
+				if(nl.getLength()!=0){
+					Node currentItem = nl.item(0);
+					result.setYear(""+Integer.parseInt(currentItem.getTextContent()));
+				}else {
+					result.setYear(null);
+					logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				}
+
+			} catch (Exception e) {
+
 				result.setYear(null);
-				logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + nl.item(0));
+
 			}
-
-
 			/**
 			 * Map Image
 			 * TODO: Change Fake Tag. Currently there is no way to retrieve images from resources!
@@ -283,15 +297,15 @@ public class DataLoader {
 			/**
 			 * Map Presentation
 			 */
-			expr = xpath.compile("//record/datafield[@tag='035']/subfield[@code='a']");
+			expr = xpath.compile("//record/datafield[@tag='020']/subfield[@code='a']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
-				String id = currentItem.getTextContent();
+				//String id = currentItem.getTextContent();
 				
-				id = id.substring(id.indexOf(")")+1, id.length());
-				result.setPresentation(GlobalSettings.getBaseURI() +  id);
+				//id = id.substring(id.indexOf(")")+1, id.length());
+				result.setPresentation("https://opac.sub.uni-goettingen.de/DB=1/FKT=1007/FRM=9782746740785/IMPLAND=Y/LNG=DU/LRSET=7/MAT=/MATC=/SET=7/SID=97538465-1/SRT=YOP/SV=y/TTL=1/CMD?ACT=SRCHA&IKT=1007&SRT=YOP&TRM=" +  currentItem.getTextContent());
 			}else {
 				result.setPresentation(GlobalSettings.getNoPresentationURL());
 				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
@@ -310,6 +324,9 @@ public class DataLoader {
 
 				String scale = currentItem.getTextContent();
 				
+				try {
+					
+				
 				if(scale.substring(0, scale.indexOf("(")).trim().length()!=0){
 				
 					scale = scale.replace(";", "");
@@ -322,6 +339,12 @@ public class DataLoader {
 					logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 				}
 				
+				} catch (Exception e) {
+
+					result.setScale("0:0000");
+					logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+
+				}
 				
 			}else {
 				result.setScale("0:0000");
@@ -343,12 +366,14 @@ public class DataLoader {
 	}
 
 	/**
-	 * 
-	 * @param bbox -> "1:50.000 ; (E 016 05 -E 016 20 /N 047 45 -N 047 30)"  
+ 	 * @param bbox -> "(E 016 05 -E 016 20 /N 047 45 -N 047 30) or (W 043 00--W 042 30/S 012 30--S 013 00)"  
 	 * @return wkt -> "POLYGON(16.2 47.45, 16.05 47.45, 16.05 47.3, 16.2 47.3, 16.2 47.45)"
 	 */	
 	public String getWKTPolygon(String bbox){
 					
+		/**
+		 * (E 016 05 -E 016 20 /N 047 45 -N 047 30)
+		 */
 		String coordinates = bbox.substring(bbox.indexOf("(")+1,bbox.indexOf(")")); 
 		
 		double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.split(" ")[2]);
@@ -357,6 +382,10 @@ public class DataLoader {
 		double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
 		
 		String wkt = "POLYGON(" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + ")"; 
+		
+		/**
+		 * (W 043 00--W 042 30/S 012 30--S 013 00)
+		 */				
 		
 		return wkt;
 	}	
@@ -369,7 +398,7 @@ public class DataLoader {
 	public String getSPARQLInsert(MapRecord map){
 
 		String SPARQLinsert = "\nINSERT DATA {\n " ;
-		SPARQLinsert = SPARQLinsert + "    GRAPH <http://ulb.uni-muenster.de/context/karten/muenster> {\n" ;
+		SPARQLinsert = SPARQLinsert + "    GRAPH <http://ulb.uni-muenster.de/context/karten/goettingen> {\n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> a <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
 		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
@@ -436,42 +465,52 @@ public class DataLoader {
 
 	}
 
-	public void createSpatiotemporalIndexes(MapRecord map){
+	public void createSpatiotemporalIndexes(ArrayList<MapRecord> maps){
 
-		String sparql = "INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + map.getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }";
-
-		try {
-
-			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
-
-			URL url = new URL( GlobalSettings.getEndpoint());
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod( "POST" );
-			connection.setDoInput(true);
-			connection.setDoOutput(true);
-			connection.setUseCaches(false);
-			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
-
-			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-			writer.write(body);
-			writer.flush();
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-			writer.close();
-			reader.close();
-
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
-		} catch (MalformedURLException e) {			
-			e.printStackTrace();
-			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
-		} catch (IOException e) {
-			e.printStackTrace();
-			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());			
+		StringBuffer buffer = new StringBuffer();
+		
+		for (int i = 0; i < maps.size(); i++) {
+			
+			buffer.append("INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }\n");
 		}
+		
+		
+//		String sparql = "INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + map.getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }";
+
+		System.out.println(buffer.toString());
+		
+//		try {
+//
+//			String body = "update=" + URLEncoder.encode(buffer.toString(),"UTF-8");
+//
+//			URL url = new URL( GlobalSettings.getEndpoint() );
+//			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//			connection.setRequestMethod( "POST" );
+//			connection.setDoInput(true);
+//			connection.setDoOutput(true);
+//			connection.setUseCaches(false);
+//			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
+//
+//			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+//			writer.write(body);
+//			writer.flush();
+//
+//			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+//
+//			writer.close();
+//			reader.close();
+//
+//		} catch (UnsupportedEncodingException e) {
+//			e.printStackTrace();
+//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
+//		} catch (MalformedURLException e) {			
+//			e.printStackTrace();
+//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());			
+//		}
 
 	}
 	
@@ -481,7 +520,7 @@ public class DataLoader {
 
 			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
 
-			URL url = new URL( GlobalSettings.getEndpoint() );
+			URL url = new URL( "http://linkeddata.uni-muenster.de:8081/parliament/sparql" );
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod( "POST" );
 			connection.setDoInput(true);
