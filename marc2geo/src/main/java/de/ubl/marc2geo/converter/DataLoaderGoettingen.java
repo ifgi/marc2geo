@@ -1,11 +1,16 @@
 package de.ubl.marc2geo.converter;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,19 +41,22 @@ public class DataLoaderGoettingen {
 
 	private static Logger logger = Logger.getLogger("DataLoader-Göttingen");
 
+	
 	private ResultSet loadData(){
 
 		Statement statement = null;
 		ResultSet result = null;
 		MySQLConnector cnn = new MySQLConnector();
-
+		
+				
 		try {
 
 			statement =  cnn.getConnection().createStatement();
 			logger.info("Loading data from database...");
 			//result = statement.executeQuery("SELECT * FROM transfer.KATALOG2");
-			result = statement.executeQuery("SELECT * FROM transfer.goettingen");
-
+			result = statement.executeQuery("SELECT * FROM transfer.goettingen_dezember2015");
+			
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			logger.fatal("Error loading data from " + GlobalSettings.getDatabaseHost() + ":\n" + e.getMessage());
@@ -86,7 +94,7 @@ public class DataLoaderGoettingen {
 
 				} else {
 
-					logger.error("Map [" + map.getId() + "] does not contain all required properties. This map is incomplete and therefore won't be stored.");
+					//logger.error("Map [" + map.getId() + "] does not contain all required properties. This map is incomplete and therefore won't be stored.");
 					invalid++;
 				}
 
@@ -107,7 +115,42 @@ public class DataLoaderGoettingen {
 		
 	}
 
+	
+	private void writeLogEntry(String entry){
+		
+		try {
+			
+			StringBuffer buffer = new StringBuffer();
+			buffer.append(entry+"\n");
+			
+			FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/delete/invalid_maps.log"),true);
+			
+			OutputStreamWriter writer = new OutputStreamWriter(fileStream, "UTF8");
+			
+			writer.append(buffer.toString());
+			writer.close();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	public static double round(double value, int places) {
+	    
+		if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    
+	    return bd.doubleValue();
+	    
+	}
+	
+	
 	private MapRecord parseMARC21(String marc21) {
 
 		MapRecord result = new MapRecord();
@@ -131,10 +174,11 @@ public class DataLoaderGoettingen {
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);	    
-				result.setTitle(currentItem.getTextContent());
+				result.setTitle(currentItem.getTextContent().replace("\"", "\'"));
 			} else {
 				result.setTitle(null);
 				logger.error("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -149,21 +193,26 @@ public class DataLoaderGoettingen {
 			} else {
 				result.setId(null);
 				logger.error("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 
 			/**
 			 * Map URI
 			 */
-			expr = xpath.compile("//record/datafield[@tag='035']/subfield[@code='a']");
+			//expr = xpath.compile("//record/datafield[@tag='035']/subfield[@code='a']");
+			expr = xpath.compile("//record/controlfield[@tag='001']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);		    
-				result.setUri(GlobalSettings.getBaseURI() + currentItem.getTextContent().replace("(", "").replace(")",""));
+				//(DE-599)
+				result.setUri("https://opac.sub.uni-goettingen.de/"+currentItem.getTextContent());
+				//result.setUri(GlobalSettings.getBaseURI() + currentItem.getTextContent().replace("(", "").replace(")",""));
 			} else {
 				result.setUri(null);
 				logger.error("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -174,10 +223,10 @@ public class DataLoaderGoettingen {
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);
-				result.setDescription(currentItem.getTextContent());
+				result.setDescription(currentItem.getTextContent().replace("\"", "\'"));
 			} else {
 				result.setDescription("");
-				logger.warn("No description for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				//logger.warn("No description for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -186,58 +235,103 @@ public class DataLoaderGoettingen {
 			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
-			String coordinates="";
+			String coordinates= new String();
+			
 			if(nl.getLength()!=0){
 
 				try {
 					
 				Node currentItem = nl.item(0);
-				coordinates = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("(")+1,currentItem.getTextContent().indexOf(")")).trim(); 
+				//coordinates = currentItem.getTextContent().substring(currentItem.getTextContent().indexOf("(")+1,currentItem.getTextContent().indexOf(")")); 
+				coordinates = currentItem.getTextContent();
+								
+				if(currentItem.getTextContent().equals("(E 013 20--E 014 20/N 051 30--N 051 00).")){
+					System.out.println("!!!");
+				}
 				
 				double east = 0.0;
 				double west = 0.0;
 				double north = 0.0;
 				double south = 0.0;
 				
-				if(coordinates.contains("E") && coordinates.contains("N")){
+				String coordinateString;
+	
+				coordinateString = coordinates.replace("--", " -");			
+				coordinateString = coordinateString.toUpperCase();
+				coordinateString = coordinateString.replace("/", " /");
+				coordinateString = coordinateString.replace("/", "");
+				coordinateString = coordinateString.replace("(", "");
+				coordinateString = coordinateString.replace(")", "");
+				coordinateString = coordinateString.replace("[", "");
+				coordinateString = coordinateString.replace("]", "");
+				coordinateString = coordinateString.replace(".", "");
+				coordinateString = coordinateString.replace("  ", " ");
+				
+				String[] array = coordinateString.trim().split(" ");
+								
+				for (int j = 0; j < array.length; j++) {
+					
+					if (array[j].equals("W")) {			
+						
+						west = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						west *= -1;						
+						
+					} else if (array[j].equals("-W")) {
 
-					coordinates = coordinates.replace("--", "");
-					coordinates = coordinates.replace("E", "");
-					coordinates = coordinates.replace("/N", "");
-					coordinates = coordinates.replace("N", "").trim();
-									
-					east = Double.parseDouble(coordinates.split(" ")[0] + "." + coordinates.trim().split(" ")[1]);
-					west = Double.parseDouble(coordinates.split(" ")[2] + "." + coordinates.split(" ")[3]);
-					north = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
-					south = Double.parseDouble(coordinates.split(" ")[6] + "." + coordinates.split(" ")[7]);
-
-				} else if(coordinates.contains("W") && coordinates.contains("S")){
-
-					coordinates = coordinates.replace("--", "");
-					coordinates = coordinates.replace("W", "");
-					coordinates = coordinates.replace("/S", "");
-					coordinates = coordinates.replace("S", "").trim();
-										
-					east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.trim().split(" ")[0]);
-					west = Double.parseDouble(coordinates.split(" ")[3] + "." + coordinates.split(" ")[2]);
-					north = Double.parseDouble(coordinates.split(" ")[5] + "." + coordinates.split(" ")[4]);
-					south = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[6]);
+						east = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						east *= -1;
+						
+					} else if (array[j].equals("S")) {
+						
+						south = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						south *= -1;
+						
+					} else if (array[j].equals("-S")) {
+						
+						north = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						north *= -1;
+						
+					} else if (array[j].equals("E")) {
+						
+						east = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+												
+					} else if (array[j].equals("-E")) {
+						
+						west = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						
+					} else if (array[j].equals("N")) {
+						
+						north = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+						
+					} else if (array[j].equals("-N")) {
+						
+						south = (Double.parseDouble(array[j+1]) + (Double.parseDouble(array[j+2])/60));
+													
+					}
 					
 				}
+					
+				west = round(west,2); 
+				east = round(east,2);
+				south = round(south,2);
+				north = round(north,2);
 				
-				
-				String wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + "))"; 
+				String	wkt = "<" + GlobalSettings.getCRS() + ">POLYGON((" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + "))";
 				result.setGeometry(wkt);
-				logger.info("WKT Geometry created for map: " + result.getId() + " " +  wkt);
+				
 				
 				} catch (Exception e) {
+					
 					logger.error("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+								
+					this.writeLogEntry("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
 					result.setGeometry(null);
 				}
 
 			} else {
 
 				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				//this.writeLogEntry("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 				result.setGeometry(null);
 
 
@@ -254,7 +348,7 @@ public class DataLoaderGoettingen {
 				result.setMapSize(currentItem.getTextContent());				
 			}else {
 				result.setMapSize("");
-				logger.warn("No paper map size for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				//logger.warn("No paper map size for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -262,21 +356,62 @@ public class DataLoaderGoettingen {
 			 */
 			expr = xpath.compile("//record/datafield[@tag='260']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-
+			String tmpNode ="";
+			
 			try {
 			
 				if(nl.getLength()!=0){
 					Node currentItem = nl.item(0);
-					result.setYear(""+Integer.parseInt(currentItem.getTextContent()));
+					tmpNode = currentItem.getTextContent();
+					String tmpYear = currentItem.getTextContent().replace("[", "").toUpperCase();
+					tmpYear = tmpYear.replace("]", "");
+					tmpYear = tmpYear.replace(" ", "");
+					tmpYear = tmpYear.replace("C", "");
+					tmpYear = tmpYear.replace("-", "");
+					tmpYear = tmpYear.replace("(", "");
+					tmpYear = tmpYear.replace(")", "");
+					tmpYear = tmpYear.replace("D", "");
+					tmpYear = tmpYear.replace("L", "");
+					tmpYear = tmpYear.replace(".", "");
+					tmpYear = tmpYear.replace("A", "");
+					tmpYear = tmpYear.replace("V", "");
+					tmpYear = tmpYear.replace("O", "");
+					tmpYear = tmpYear.replace("R", "");
+					tmpYear = tmpYear.replace("S", "");
+					tmpYear = tmpYear.replace("/", "");
+					tmpYear = tmpYear.replace("C/", "");
+					tmpYear = tmpYear.replace("I", "");
+					tmpYear = tmpYear.replace("U", "");
+					tmpYear = tmpYear.replace("M", "");
+					tmpYear = tmpYear.replace("N", "");
+					tmpYear = tmpYear.replace("H", "");
+					tmpYear = tmpYear.replace("O", "");
+					tmpYear = tmpYear.replace("?", "");
+					
+					if(tmpYear.trim().length()!=4){
+						
+						result.setYear(null);
+						this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+						logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+						
+						
+					} else {
+						
+						result.setYear(""+Integer.parseInt(tmpYear));
+					}
+					
 				}else {
+					
 					result.setYear(null);
 					logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+					
 				}
 
 			} catch (Exception e) {
 
 				result.setYear(null);
-				logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + nl.item(0));
+				logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+				this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
 
 			}
 			/**
@@ -290,27 +425,14 @@ public class DataLoaderGoettingen {
 				Node currentItem = nl.item(0);
 				result.setImage(currentItem.getTextContent());				
 			}else {
-				result.setImage(GlobalSettings.getNoImageURL());
-				logger.warn("No image for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setImage("https://upload.wikimedia.org/wikipedia/de/c/c9/Uni_G%C3%B6ttingen_Siegel.png");
+				//logger.warn("No image for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
 			 * Map Presentation
 			 */
-			expr = xpath.compile("//record/datafield[@tag='020']/subfield[@code='a']");
-			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-
-			if(nl.getLength()!=0){
-				Node currentItem = nl.item(0);
-				//String id = currentItem.getTextContent();
-				
-				//id = id.substring(id.indexOf(")")+1, id.length());
-				result.setPresentation("https://opac.sub.uni-goettingen.de/DB=1/FKT=1007/FRM=9782746740785/IMPLAND=Y/LNG=DU/LRSET=7/MAT=/MATC=/SET=7/SID=97538465-1/SRT=YOP/SV=y/TTL=1/CMD?ACT=SRCHA&IKT=1007&SRT=YOP&TRM=" +  currentItem.getTextContent());
-			}else {
-				result.setPresentation(GlobalSettings.getNoPresentationURL());
-				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-			}
-
+			result.setPresentation("https://opac.sub.uni-goettingen.de/DB=1/FKT=/FRM=/IMPLAND=Y/LNG=DU/LRSET=/MATC=/SET=/SID=/SRT=YOP/TTL=/CMD?ACT=SRCHA&TRM=ppn+"+result.getId());
 
 			/**
 			 * Map Scale
@@ -323,32 +445,12 @@ public class DataLoaderGoettingen {
 				Node currentItem = nl.item(0);
 
 				String scale = currentItem.getTextContent();
-				
-				try {
-					
-				
-				if(scale.substring(0, scale.indexOf("(")).trim().length()!=0){
-				
-					scale = scale.replace(";", "");
-					scale = scale.substring(0, scale.indexOf("(")).trim();
-					result.setScale(scale);
-					
-				} else {
-					
-					result.setScale("0:0000");
-					logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-				}
-				
-				} catch (Exception e) {
-
-					result.setScale("0:0000");
-					logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-
-				}
-				
+				result.setScale(scale);
+								
 			}else {
+				
 				result.setScale("0:0000");
-				logger.warn("No scale for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				
 			}			
 
 
@@ -365,63 +467,96 @@ public class DataLoaderGoettingen {
 		return result;
 	}
 
-	/**
- 	 * @param bbox -> "(E 016 05 -E 016 20 /N 047 45 -N 047 30) or (W 043 00--W 042 30/S 012 30--S 013 00)"  
-	 * @return wkt -> "POLYGON(16.2 47.45, 16.05 47.45, 16.05 47.3, 16.2 47.3, 16.2 47.45)"
-	 */	
-	public String getWKTPolygon(String bbox){
-					
-		/**
-		 * (E 016 05 -E 016 20 /N 047 45 -N 047 30)
-		 */
-		String coordinates = bbox.substring(bbox.indexOf("(")+1,bbox.indexOf(")")); 
-		
-		double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.split(" ")[2]);
-		double west = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
-		double north = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[8]);
-		double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
-		
-		String wkt = "POLYGON(" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + ")"; 
-		
-		/**
-		 * (W 043 00--W 042 30/S 012 30--S 013 00)
-		 */				
-		
-		return wkt;
-	}	
+//	/**
+// 	 * @param bbox -> "(E 016 05 -E 016 20 /N 047 45 -N 047 30) or (W 043 00--W 042 30/S 012 30--S 013 00)"  
+//	 * @return wkt -> "POLYGON(16.2 47.45, 16.05 47.45, 16.05 47.3, 16.2 47.3, 16.2 47.45)"
+//	 */	
+//	public String getWKTPolygon(String bbox){
+//					
+//		/**
+//		 * (E 016 05 -E 016 20 /N 047 45 -N 047 30)
+//		 */
+//		String coordinates = bbox.substring(bbox.indexOf("(")+1,bbox.indexOf(")")); 
+//		
+//		double east = Double.parseDouble(coordinates.split(" ")[1] + "." + coordinates.split(" ")[2]);
+//		double west = Double.parseDouble(coordinates.split(" ")[4] + "." + coordinates.split(" ")[5]);
+//		double north = Double.parseDouble(coordinates.split(" ")[7] + "." + coordinates.split(" ")[8]);
+//		double south = Double.parseDouble(coordinates.split(" ")[10] + "." + coordinates.split(" ")[11]);
+//		
+//		String wkt = "POLYGON(" + west + " " + north + ", " + east + " " + north + ", " + east + " " + south + ", " + west + " " + south + ", " + west + " " + north + ")"; 
+//		
+//		/**
+//		 * (W 043 00--W 042 30/S 012 30--S 013 00)
+//		 */				
+//		
+//		return wkt;
+//	}	
 	
 	/**
 	 * 
 	 * @param map
 	 * @return SPARQL insert statement.
 	 */
-	public String getSPARQLInsert(MapRecord map){
+	public String getSPARQLInsert(MapRecord map, String mode){
 
-		String SPARQLinsert = "\nINSERT DATA {\n " ;
-		SPARQLinsert = SPARQLinsert + "    GRAPH <http://ulb.uni-muenster.de/context/karten/goettingen> {\n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> a <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> '" + map.getMapSize() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> '" + map.getTitle() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> a <http://www.w3.org/2006/time#Instant> . \n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
-
-		if(map.getGeometry() != null){
-
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+		String SPARQLinsert = "";
+		
+		if (mode.equals("insert")) {
+			
+			SPARQLinsert = "\nINSERT DATA {\n " ;
+			SPARQLinsert = SPARQLinsert + "    GRAPH <http://ulb.uni-muenster.de/context/karten/goettingen> {\n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> a <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> '" + map.getMapSize() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> '" + map.getTitle() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> a <http://www.w3.org/2006/time#Instant> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
+	
+			if(map.getGeometry() != null){
+	
+				SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+	
+			}
+	
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "    } \n" ;
+			SPARQLinsert = SPARQLinsert + "} \n" ;
 
 		}
+		
+		if (mode.equals("dump")){
+			
+			SPARQLinsert = "\n " ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
+	
+			if(map.getGeometry() != null){
+	
+				SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+	
+			}
+	
+			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 
-		SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> '" + map.getDescription() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		SPARQLinsert = SPARQLinsert + "    } \n" ;
-		SPARQLinsert = SPARQLinsert + "} \n" ;
-
+			
+		}
+		
 		return SPARQLinsert;
 
 	}
@@ -474,69 +609,55 @@ public class DataLoaderGoettingen {
 			buffer.append("INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }\n");
 		}
 		
-		
-//		String sparql = "INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + map.getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }";
-
 		System.out.println(buffer.toString());
 		
-//		try {
-//
-//			String body = "update=" + URLEncoder.encode(buffer.toString(),"UTF-8");
-//
-//			URL url = new URL( GlobalSettings.getEndpoint() );
-//			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//			connection.setRequestMethod( "POST" );
-//			connection.setDoInput(true);
-//			connection.setDoOutput(true);
-//			connection.setUseCaches(false);
-//			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-//			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
-//
-//			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-//			writer.write(body);
-//			writer.flush();
-//
-//			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//
-//			writer.close();
-//			reader.close();
-//
-//		} catch (UnsupportedEncodingException e) {
-//			e.printStackTrace();
-//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
-//		} catch (MalformedURLException e) {			
-//			e.printStackTrace();
-//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			logger.fatal("Error creating indexes for named graph at [" + GlobalSettings.getEndpoint() + "] >> " + e.getCause());			
-//		}
 
 	}
 	
-	public void storeTriples(String sparql){
+	public void storeTriples(String sparql, String mode){
 
+		
 		try {
 
-			String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
-
-			URL url = new URL( "http://linkeddata.uni-muenster.de:8081/parliament/sparql" );
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod( "POST" );
-			connection.setDoInput(true);
-			connection.setDoOutput(true);
-			connection.setUseCaches(false);
-			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
-
-			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-			writer.write(body);
-			writer.flush();
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-			writer.close();
-			reader.close();
+			if (mode.equals("insert")){
+				
+				String body = "update=" + URLEncoder.encode(sparql,"UTF-8");
+	
+				URL url = new URL( "http://giv-lodum.uni-muenster.de:8081/parliament/sparql" );
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection.setRequestMethod( "POST" );
+				connection.setDoInput(true);
+				connection.setDoOutput(true);
+				connection.setUseCaches(false);
+				connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+				connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
+	
+				OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+				writer.write(body);
+				writer.flush();
+	
+				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+	
+				writer.close();
+				reader.close();
+			
+			}
+			
+			
+			if(mode.equals("dump")){
+			
+				StringBuffer buffer = new StringBuffer();
+				buffer.append(sparql);
+			
+				
+				FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/delete/output_goettingen_dezember2015.nt"),true);
+				OutputStreamWriter writer = new OutputStreamWriter(fileStream, "UTF8");
+				
+				writer.append(buffer.toString());
+				writer.close();
+								
+				
+			}
 
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();

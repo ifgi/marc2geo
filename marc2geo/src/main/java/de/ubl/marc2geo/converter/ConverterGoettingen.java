@@ -36,11 +36,13 @@ public class ConverterGoettingen {
 //			logger.info("Dropping named graph [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
 //			loader.dropNamedGraph(maps.get(i));
 			
-			logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" at [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
-			loader.storeTriples(loader.getSPARQLInsert(maps.get(i)));					
+			//logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" at [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
+			loader.storeTriples(loader.getSPARQLInsert(maps.get(i),"dump"),"dump");
+			
 			
 		}
 
+		logger.info("The end :-)");
 		//loader.createSpatiotemporalIndexes(maps);
 
 		
