@@ -1,11 +1,11 @@
-package de.ubl.marc2geo.converter;
+package de.ubl.converter.goettingen;
 
 import java.util.ArrayList;
 import org.apache.log4j.Logger;
 import de.ulb.marc2geo.core.GlobalSettings;
 import de.ulb.marc2geo.core.MapRecord;
 
-public class Converter {
+public class ConverterGoettingen {
 	
 	private static Logger logger = Logger.getLogger("Converter");
 	
@@ -24,8 +24,9 @@ public class Converter {
 									   System.getProperty("os.arch").toString()+")\n\nStarting Map Health Check...\n");
 		
 		
-		DataLoader loader = new DataLoader();		
+		DataLoaderGoettingen loader = new DataLoaderGoettingen();		
 		ArrayList<MapRecord> maps = new ArrayList<MapRecord>(); 
+		
 		maps = loader.getMaps();
 		
 		
@@ -36,13 +37,17 @@ public class Converter {
 //			logger.info("Dropping named graph [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
 //			loader.dropNamedGraph(maps.get(i));
 			
-			logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" at [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
-			loader.storeTriples(loader.getSPARQLInsert(maps.get(i)));					
+			//logger.info("Storing map " + maps.get(i).getId() + " \"" + maps.get(i).getTitle() + "\" at [" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "] ...");
+			loader.storeTriples(loader.getSPARQLInsert(maps.get(i),"dump"),"dump");
+			
 			
 		}
 
+		logger.info("The end :-)");
 		//loader.createSpatiotemporalIndexes(maps);
 
 		
 	}
+	
+	
 }

@@ -1,4 +1,4 @@
-package de.ubl.marc2geo.converter;
+package de.ubl.converter.goettingen;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,7 +53,6 @@ public class DataLoaderGoettingen {
 
 			statement =  cnn.getConnection().createStatement();
 			logger.info("Loading data from database...");
-			//result = statement.executeQuery("SELECT * FROM transfer.KATALOG2");
 			result = statement.executeQuery("SELECT * FROM transfer.goettingen_dezember2015");
 			
 			
@@ -149,8 +148,7 @@ public class DataLoaderGoettingen {
 	    return bd.doubleValue();
 	    
 	}
-	
-	
+		
 	private MapRecord parseMARC21(String marc21) {
 
 		MapRecord result = new MapRecord();
@@ -650,7 +648,7 @@ public class DataLoaderGoettingen {
 				buffer.append(sparql);
 			
 				
-				FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/delete/output_goettingen_dezember2015.nt"),true);
+				FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/delete/output_goettingen_dezember2015-2.nt"),true);
 				OutputStreamWriter writer = new OutputStreamWriter(fileStream, "UTF8");
 				
 				writer.append(buffer.toString());

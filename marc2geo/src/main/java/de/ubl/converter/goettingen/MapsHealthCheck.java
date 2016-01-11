@@ -1,4 +1,4 @@
-package de.ubl.marc2geo.converter;
+package de.ubl.converter.goettingen;
 
 import org.apache.log4j.Logger;
 import de.ulb.marc2geo.core.GlobalSettings;

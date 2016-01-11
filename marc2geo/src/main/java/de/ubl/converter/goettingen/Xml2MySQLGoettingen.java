@@ -1,4 +1,4 @@
-package de.ubl.marc2geo.converter;
+package de.ubl.converter.goettingen;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -34,7 +34,8 @@ public class Xml2MySQLGoettingen {
 			
 			System.out.println("Loading " + offset + " XML records from "+ start +" to " + (start + offset) + " records ..." );
 			
-			URL url = new URL("http://sru.gbv.de/opac-de-7?version=1.2&operation=searchRetrieve&query=pica.sst%3Dkts+sortby+year%2Fdescending&maximumRecords="+offset+"&startRecord="+start);
+			//URL url = new URL("http://sru.gbv.de/opac-de-7?version=1.2&operation=searchRetrieve&query=pica.sst%3Dkts+sortby+year%2Fdescending&maximumRecords="+offset+"&startRecord="+start);
+			URL url = new URL("http://sru.gbv.de/opac-de-7?version=1.2&operation=searchRetrieve&query=pica.sst%3Dkts+sortby+year%2Fascending&maximumRecords="+offset+"&startRecord="+start);
 
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();		
 			Document doc = dbf.newDocumentBuilder().parse(new InputSource(url.openStream()));
@@ -55,7 +56,7 @@ public class Xml2MySQLGoettingen {
 					t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 					t.transform(new DOMSource(nodes.item(j)), new StreamResult(sw));
 					
-					buffer.append("INSERT INTO transfer.goettingen (xml) VALUES ('"+sw.toString().replace("\'", "''")+"');\n");
+					buffer.append("INSERT INTO transfer.goettingen_dezember2015 (xml) VALUES ('"+sw.toString().replace("\'", "''")+"');\n");
 									
 				} catch (TransformerException te) {
 					System.out.println("nodeToString Transformer Exception");
@@ -67,7 +68,7 @@ public class Xml2MySQLGoettingen {
 //			System.out.println("Printing SQL INSERT Statements to file ... ");
 			
 			//PrintWriter writer = new PrintWriter(outputPath+"output.sql", "UTF-8");
-			PrintWriter writer = new PrintWriter(new FileWriter(outputPath+"output_goettingen_30112015.sql", true)); 
+			PrintWriter writer = new PrintWriter(new FileWriter(outputPath+"output_goettingen_08122015-2.sql", true)); 
 			writer.println(buffer.toString());
 			writer.close();
 					

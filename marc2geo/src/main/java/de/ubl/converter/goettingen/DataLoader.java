@@ -1,4 +1,4 @@
-package de.ubl.marc2geo.converter;
+package de.ubl.converter.goettingen;
 
 import java.io.BufferedReader;
 import java.io.IOException;
