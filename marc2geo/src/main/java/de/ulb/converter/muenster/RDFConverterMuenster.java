@@ -96,13 +96,24 @@ public class RDFConverterMuenster {
 		
 		try {
 
+			String query = " SELECT KATALOG.isbn, KATALOGXML.rawxml, VLDATEN.url " +
+						   " FROM KATALOG " + 
+						   " LEFT JOIN KATALOGXML ON KATALOG.katkey = KATALOGXML.katkey " + 
+						   " LEFT JOIN VLDATEN ON KATALOG.hbzid = VLDATEN.hbzidprint " + 
+						   " WHERE " + 
+						   "	KATALOG.leader like '______e%'";	
+			
 			statement =  this.getConnection().createStatement();
-			result = statement.executeQuery(" SELECT k.isbn, x.rawxml " +
-											" FROM KATALOGXML as x, " +
-											"	  KATALOG as k " +
-											" WHERE k.leader like '______e%' AND " +
-											"	   x.katkey = k.katkey AND " +
-											"	   k.isbn IS NOT NULL;");
+//			result = statement.executeQuery(" SELECT k.isbn, x.rawxml vl.url" +
+//											" FROM KATALOGXML as x, " +
+//											"	   KATALOG as k," +
+//											"	   VLDATA as vl " +
+//											" WHERE k.leader like '______e%' AND " +
+//											" 	   vl.hbzidprint = k.hbzid AND" +
+//											"	   x.katkey = k.katkey ;"); 
+
+			
+			result = statement.executeQuery(query);
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -128,7 +139,7 @@ public class RDFConverterMuenster {
 
 			while (data.next()) {
 
-				MapRecord map = this.parseMARC21(data.getString("x.rawxml"));
+				MapRecord map = this.parseMARC21(data.getString("KATALOGXML.rawxml"));
 
 				if(map.getYear() != null && 
 				   map.getTitle() != null &&
@@ -136,6 +147,14 @@ public class RDFConverterMuenster {
 				   map.getId() != null &&
 				   map.getUri() != null ){
 
+					System.out.println("######### " + data.getString("VLDATEN.url") );
+					
+					if(data.getString("VLDATEN.url")!=null){
+						
+						map.setPresentation("http://nbn-resolving.de/"+data.getString("VLDATEN.url"));
+						
+					}
+					
 					result.add(map);
 					valid++;
 
@@ -169,8 +188,7 @@ public class RDFConverterMuenster {
 		return result;
 		
 	}
-
-	
+		
 	private void writeLogEntry(String entry){
 		
 		try {
@@ -193,7 +211,6 @@ public class RDFConverterMuenster {
 			e.printStackTrace();
 		}
 	}
-
 	
 	public static double round(double value, int places) {
 	    
@@ -205,7 +222,6 @@ public class RDFConverterMuenster {
 	    return bd.doubleValue();
 	    
 	}
-	
 		
 	private MapRecord parseMARC21(String marc21) {
 
@@ -297,6 +313,13 @@ public class RDFConverterMuenster {
 			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
+//			if(nl.getLength()!=0){
+//
+//				expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='a']");
+//				nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+//				
+//			}
+			
 			String coordinates= new String();
 			
 			if(nl.getLength()!=0){
@@ -422,32 +445,32 @@ public class RDFConverterMuenster {
 				if(nl.getLength()!=0){
 					Node currentItem = nl.item(0);
 					tmpNode = currentItem.getTextContent();
-					String tmpYear = currentItem.getTextContent().replace("[", "").toUpperCase();
-					tmpYear = tmpYear.replace("]", "");
-					tmpYear = tmpYear.replace(" ", "");
-					tmpYear = tmpYear.replace("C", "");
-					tmpYear = tmpYear.replace("-", "");
-					tmpYear = tmpYear.replace("(", "");
-					tmpYear = tmpYear.replace(")", "");
-					tmpYear = tmpYear.replace("D", "");
-					tmpYear = tmpYear.replace("L", "");
-					tmpYear = tmpYear.replace(".", "");
-					tmpYear = tmpYear.replace("A", "");
-					tmpYear = tmpYear.replace("V", "");
-					tmpYear = tmpYear.replace("O", "");
-					tmpYear = tmpYear.replace("R", "");
-					tmpYear = tmpYear.replace("S", "");
-					tmpYear = tmpYear.replace("/", "");
-					tmpYear = tmpYear.replace("C/", "");
-					tmpYear = tmpYear.replace("I", "");
-					tmpYear = tmpYear.replace("U", "");
-					tmpYear = tmpYear.replace("M", "");
-					tmpYear = tmpYear.replace("N", "");
-					tmpYear = tmpYear.replace("H", "");
-					tmpYear = tmpYear.replace("O", "");
-					tmpYear = tmpYear.replace("?", "");
+					String year = currentItem.getTextContent().replace("[", "").toUpperCase();
+					year = year.replace("]", "");
+					year = year.replace(" ", "");
+					year = year.replace("C", "");
+					year = year.replace("-", "");
+					year = year.replace("(", "");
+					year = year.replace(")", "");
+					year = year.replace("D", "");
+					year = year.replace("L", "");
+					year = year.replace(".", "");
+					year = year.replace("A", "");
+					year = year.replace("V", "");
+					year = year.replace("O", "");
+					year = year.replace("R", "");
+					year = year.replace("S", "");
+					year = year.replace("/", "");
+					year = year.replace("C/", "");
+					year = year.replace("I", "");
+					year = year.replace("U", "");
+					year = year.replace("M", "");
+					year = year.replace("N", "");
+					year = year.replace("H", "");
+					year = year.replace("O", "");
+					year = year.replace("?", "");
 					
-					if(tmpYear.trim().length()!=4){
+					if(year.trim().length()!=4){
 						
 						result.setYear(null);
 						this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
@@ -456,7 +479,7 @@ public class RDFConverterMuenster {
 						
 					} else {
 						
-						result.setYear(""+Integer.parseInt(tmpYear));
+						result.setYear(""+Integer.parseInt(year));
 					}
 					
 				}else {
