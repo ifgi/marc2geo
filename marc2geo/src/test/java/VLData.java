@@ -23,7 +23,7 @@ public class VLData {
 	public static void main(String[] args) {
 
 		VLData vl = new VLData();		
-		vl.getVLMetadata("HT006989218");
+		vl.getVLMetadata("HT017212150X");
 		
 	}
 
@@ -55,7 +55,7 @@ public class VLData {
 				result = currentItem.getTextContent();                                     
 			}
 			
-			System.out.println("gnd URI -> "+result);
+			System.out.println("URN -> "+result);
 
 		
 			subfields = (NodeList) xpath.evaluate("//records/record/recordData/mods/subject/geographic[@authority='gnd']/@valueURI", document,XPathConstants.NODESET);
@@ -67,9 +67,9 @@ public class VLData {
 					Node currentItem = subfields.item(i);   
 					result = currentItem.getTextContent();
 					System.out.println("gnd id ->  "+result);
+					
 				}
-				
-				                                     
+								                                     
 			}
 			
 			

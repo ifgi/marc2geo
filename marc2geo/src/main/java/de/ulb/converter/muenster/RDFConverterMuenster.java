@@ -57,7 +57,7 @@ public class RDFConverterMuenster {
 		
 		for (int i = 0; i < maps.size(); i++) {
 			
-			loader.generateRDFTriples(loader.getSPARQLInsert(maps.get(i)));					
+			loader.generateRDFTriples(loader.getRDF(maps.get(i)));					
 			
 		}
 		
@@ -144,8 +144,8 @@ public class RDFConverterMuenster {
 				if(map.getYear() != null && 
 				   map.getTitle() != null &&
 				   map.getGeometry() != null &&
-				   map.getId() != null &&
-				   map.getUri() != null ){
+				   map.getHT() != null &&
+				   map.getURI() != null ){
 
 					System.out.println("######### " + data.getString("VLDATEN.url") );
 					
@@ -249,8 +249,8 @@ public class RDFConverterMuenster {
 				result.setTitle(currentItem.getTextContent().replace("\"", "\'"));
 			} else {
 				result.setTitle(null);
-				logger.error("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("No title for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No title for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -261,11 +261,11 @@ public class RDFConverterMuenster {
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);		    
-				result.setId(currentItem.getTextContent());
+				result.setHT(currentItem.getTextContent());
 			} else {
-				result.setId(null);
-				logger.error("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setHT(null);
+				logger.error("No ID for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No ID for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -282,12 +282,12 @@ public class RDFConverterMuenster {
 				String id = currentItem.getTextContent();
 				
 				id = id.substring(id.indexOf(")")+1, id.length());
-				result.setUri(mapURI +  id);
+				result.setURI(mapURI +  id);
 				
 			} else {
-				result.setUri(null);
-				logger.error("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setURI(null);
+				logger.error("No identifier for map (to build URI): " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No identifier for map (to build URI): " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -402,15 +402,15 @@ public class RDFConverterMuenster {
 				
 				} catch (Exception e) {
 					
-					logger.error("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+					logger.error("Invalid coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\": "+ coordinates);
 								
-					this.writeLogEntry("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+					this.writeLogEntry("Invalid coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\": "+ coordinates);
 					result.setGeometry(null);
 				}
 
 			} else {
 
-				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("No coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 				result.setGeometry(null);
 
 
@@ -473,8 +473,8 @@ public class RDFConverterMuenster {
 					if(year.trim().length()!=4){
 						
 						result.setYear(null);
-						this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
-						logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+						this.writeLogEntry("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
+						logger.error("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
 						
 						
 					} else {
@@ -485,15 +485,15 @@ public class RDFConverterMuenster {
 				}else {
 					
 					result.setYear(null);
-					logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+					logger.error("No year for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 					
 				}
 
 			} catch (Exception e) {
 
 				result.setYear(null);
-				logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
-				this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+				logger.error("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
+				this.writeLogEntry("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
 
 			}
 
@@ -509,7 +509,7 @@ public class RDFConverterMuenster {
 				result.setImage(currentItem.getTextContent());				
 			}else {
 				result.setImage(noImageURL);
-				logger.warn("No image for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No image for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -526,7 +526,7 @@ public class RDFConverterMuenster {
 				result.setPresentation(mapURI +  id);
 			}else {
 				result.setPresentation(noPresentationURL);
-				logger.warn("No presentation URL for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.warn("No presentation URL for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 			
 			/**
@@ -567,34 +567,34 @@ public class RDFConverterMuenster {
 	 * @param map
 	 * @return SPARQL insert statement.
 	 */
-	public String getSPARQLInsert(MapRecord map){
+	public String getRDF(MapRecord map){
 
-		String SPARQLinsert = "";
+		String rdfTurtle = "";
 		//prefix owl: <http://www.w3.org/2002/07/owl#> 
-		SPARQLinsert = "\n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#ID> \""+ map.getId() +"\". \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> _:" + map.getId() + " . \n" ;
-		SPARQLinsert = SPARQLinsert + "_:" + map.getId() + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
-		SPARQLinsert = SPARQLinsert + "_:" + map.getId() + " <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
+		rdfTurtle = "\n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#ID> \""+ map.getHT() +"\". \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> _:" + map.getHT() + " . \n" ;
+		rdfTurtle = rdfTurtle + "_:" + map.getHT() + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
+		rdfTurtle = rdfTurtle + "_:" + map.getHT() + " <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
 		
 		if(map.getGeometry() != null){
 		
-			SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> _:" + map.getId() + " .\n";
-			SPARQLinsert = SPARQLinsert + "_:" + map.getId() + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-			SPARQLinsert = SPARQLinsert + "_:" + map.getId() + " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+			rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> _:" + map.getHT() + " .\n";
+			rdfTurtle = rdfTurtle + "_:" + map.getHT() + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+			rdfTurtle = rdfTurtle + "_:" + map.getHT() + " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
 		
 		}
 		
-		SPARQLinsert = SPARQLinsert + "<" + map.getUri() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 		
-		return SPARQLinsert;
+		return rdfTurtle;
 
 	}
 	

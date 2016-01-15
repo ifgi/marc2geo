@@ -84,8 +84,8 @@ public class DataLoaderGoettingen {
 				if(map.getYear() != null && 
 				   map.getTitle() != null &&
 				   map.getGeometry() != null &&
-				   map.getId() != null &&
-				   map.getUri() != null ){
+				   map.getHT() != null &&
+				   map.getURI() != null ){
 
 					result.add(map);
 					valid++;
@@ -175,8 +175,8 @@ public class DataLoaderGoettingen {
 				result.setTitle(currentItem.getTextContent().replace("\"", "\'"));
 			} else {
 				result.setTitle(null);
-				logger.error("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No title for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("No title for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No title for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -187,11 +187,11 @@ public class DataLoaderGoettingen {
 
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);		    
-				result.setId(currentItem.getTextContent());
+				result.setHT(currentItem.getTextContent());
 			} else {
-				result.setId(null);
-				logger.error("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No ID for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setHT(null);
+				logger.error("No ID for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No ID for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 
@@ -205,12 +205,12 @@ public class DataLoaderGoettingen {
 			if(nl.getLength()!=0){
 				Node currentItem = nl.item(0);		    
 				//(DE-599)
-				result.setUri("https://opac.sub.uni-goettingen.de/"+currentItem.getTextContent());
+				result.setURI("https://opac.sub.uni-goettingen.de/"+currentItem.getTextContent());
 				//result.setUri(GlobalSettings.getBaseURI() + currentItem.getTextContent().replace("(", "").replace(")",""));
 			} else {
-				result.setUri(null);
-				logger.error("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
-				this.writeLogEntry("No identifier for map (to build URI): " + result.getId() + " \"" + result.getTitle() + "\".");
+				result.setURI(null);
+				logger.error("No identifier for map (to build URI): " + result.getHT() + " \"" + result.getTitle() + "\".");
+				this.writeLogEntry("No identifier for map (to build URI): " + result.getHT() + " \"" + result.getTitle() + "\".");
 			}
 
 			/**
@@ -320,15 +320,15 @@ public class DataLoaderGoettingen {
 				
 				} catch (Exception e) {
 					
-					logger.error("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+					logger.error("Invalid coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\": "+ coordinates);
 								
-					this.writeLogEntry("Invalid coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\": "+ coordinates);
+					this.writeLogEntry("Invalid coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\": "+ coordinates);
 					result.setGeometry(null);
 				}
 
 			} else {
 
-				logger.error("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+				logger.error("No coordinates found for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 				//this.writeLogEntry("No coordinates found for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 				result.setGeometry(null);
 
@@ -389,8 +389,8 @@ public class DataLoaderGoettingen {
 					if(tmpYear.trim().length()!=4){
 						
 						result.setYear(null);
-						this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
-						logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+						this.writeLogEntry("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
+						logger.error("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
 						
 						
 					} else {
@@ -401,15 +401,15 @@ public class DataLoaderGoettingen {
 				}else {
 					
 					result.setYear(null);
-					logger.error("No year for map: " + result.getId() + " \"" + result.getTitle() + "\".");
+					logger.error("No year for map: " + result.getHT() + " \"" + result.getTitle() + "\".");
 					
 				}
 
 			} catch (Exception e) {
 
 				result.setYear(null);
-				logger.error("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
-				this.writeLogEntry("Invalid year for map: " + result.getId() + " \"" + result.getTitle() + "\": " + tmpNode);
+				logger.error("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
+				this.writeLogEntry("Invalid year for map: " + result.getHT() + " \"" + result.getTitle() + "\": " + tmpNode);
 
 			}
 			/**
@@ -430,7 +430,7 @@ public class DataLoaderGoettingen {
 			/**
 			 * Map Presentation
 			 */
-			result.setPresentation("https://opac.sub.uni-goettingen.de/DB=1/FKT=/FRM=/IMPLAND=Y/LNG=DU/LRSET=/MATC=/SET=/SID=/SRT=YOP/TTL=/CMD?ACT=SRCHA&TRM=ppn+"+result.getId());
+			result.setPresentation("https://opac.sub.uni-goettingen.de/DB=1/FKT=/FRM=/IMPLAND=Y/LNG=DU/LRSET=/MATC=/SET=/SID=/SRT=YOP/TTL=/CMD?ACT=SRCHA&TRM=ppn+"+result.getHT());
 
 			/**
 			 * Map Scale
@@ -503,26 +503,26 @@ public class DataLoaderGoettingen {
 			
 			SPARQLinsert = "\nINSERT DATA {\n " ;
 			SPARQLinsert = SPARQLinsert + "    GRAPH <http://ulb.uni-muenster.de/context/karten/goettingen> {\n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> a <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> '" + map.getMapSize() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> '" + map.getTitle() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> a <http://www.w3.org/2006/time#Instant> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> a <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> '" + map.getMapSize() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#title> '" + map.getTitle() + "'^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getHT() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> a <http://www.w3.org/2006/time#Instant> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> '" + map.getScale() + "'^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
 	
 			if(map.getGeometry() != null){
 	
-				SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
-				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+				SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getHT() + "> .\n";
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getHT() + "> a <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getHT() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
 	
 			}
 	
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 			SPARQLinsert = SPARQLinsert + "    } \n" ;
 			SPARQLinsert = SPARQLinsert + "} \n" ;
 
@@ -531,26 +531,26 @@ public class DataLoaderGoettingen {
 		if (mode.equals("dump")){
 			
 			SPARQLinsert = "\n " ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getId() + "> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getId() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geographicknowledge.de/vocab/maps#Map> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getHT() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
 	
 			if(map.getGeometry() != null){
 	
-				SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getId() + "> .\n";
-				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
-				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getId() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
+				SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsArea> <" + GlobalSettings.getGeometryURL() + map.getHT() + "> .\n";
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getHT() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql/1.0#Geometry> . \n" ;			   
+				SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getGeometryURL() + map.getHT() + "> <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ map.getGeometry() +"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> . \n" ;
 	
 			}
 	
-			SPARQLinsert = SPARQLinsert + "           <" + map.getUri() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 
 			
 		}
@@ -561,7 +561,7 @@ public class DataLoaderGoettingen {
 
 	public void dropNamedGraph(MapRecord map){
 
-		String sparql = "DROP GRAPH <" + GlobalSettings.getGraphBaseURI() + map.getId() + ">";
+		String sparql = "DROP GRAPH <" + GlobalSettings.getGraphBaseURI() + map.getHT() + ">";
 
 		try {
 
@@ -604,7 +604,7 @@ public class DataLoaderGoettingen {
 		
 		for (int i = 0; i < maps.size(); i++) {
 			
-			buffer.append("INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + maps.get(i).getId() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }\n");
+			buffer.append("INSERT {} WHERE {<" + GlobalSettings.getGraphBaseURI() + maps.get(i).getHT() + "> <http://parliament.semwebcentral.org/pfunction#enableIndexing> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean> }\n");
 		}
 		
 		System.out.println(buffer.toString());
