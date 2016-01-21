@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -152,28 +151,11 @@ public class METS2RDFMuenster {
 			System.out.println("CT Nummer ->  "+ map.getCT());
 
 
-//			subfields = (NodeList) xpath.evaluate("//name[@authority='gnd']/@valueURI", document,XPathConstants.NODESET);
-//
-//			if (subfields.getLength() != 0) {
-//
-//				String gnd = "";
-//				for (int i = 0; i < subfields.getLength(); i++) {
-//
-//					Node currentItem = subfields.item(i);   
-//					if(i>0)gnd = gnd + ",";
-//					gnd = gnd + currentItem.getTextContent();
-//					
-//
-//				}
-//
-//				System.out.println("gnd id ->  "+gnd);
-//			}
-
 			subfields = (NodeList) xpath.evaluate("//fileSec/fileGrp[@USE='MAX']/file/FLocat/@href", document,XPathConstants.NODESET);
 
 			if (subfields.getLength() != 0) {
 				Node currentItem = subfields.item(0);   
-				map.setImage(currentItem.getTextContent());                                     
+				map.setImage(currentItem.getTextContent().replace("/1504/", "/0/"));                                     
 			}
 
 			System.out.println("Image -> "+ map.getImage());
@@ -212,7 +194,7 @@ public class METS2RDFMuenster {
 			System.out.println("Maßstab -> " +map.getScale());
 
 			
-			subfields = (NodeList) xpath.evaluate("//links/presentation", document,XPathConstants.NODESET);
+			subfields = (NodeList) xpath.evaluate("//digiprovMD[@ID='digiprov"+vlid+"']/mdWrap/xmlData/links/presentation", document,XPathConstants.NODESET);
 
 			if (subfields.getLength() != 0) {
 				Node currentItem = subfields.item(0);   
@@ -237,8 +219,13 @@ public class METS2RDFMuenster {
 								
 			
 			if (subfields.getLength() != 0) {
+				
 				Node currentItem = subfields.item(0);   
-				map.setYear(currentItem.getTextContent());                                     
+				map.setYear(currentItem.getTextContent());
+				
+			} else {
+				
+				map.setYear("0000");
 			}
 			
 			System.out.println("Erscheinungsjahr -> " + map.getYear());
@@ -246,7 +233,7 @@ public class METS2RDFMuenster {
 			
 			
 			subfields = (NodeList) xpath.evaluate("//subject/geographic[@authority='gnd']/@valueURI", document,XPathConstants.NODESET);
-
+			NodeList gndPlacenames = (NodeList) xpath.evaluate("//subject/geographic[@authority='gnd']", document,XPathConstants.NODESET);
 
 			
 			if (subfields.getLength() != 0) {
@@ -255,17 +242,44 @@ public class METS2RDFMuenster {
 				
 				for (int i = 0; i < subfields.getLength(); i++) {
 					
-					Node currentItem = subfields.item(i);   
-					 
-
-					if(i>0)gnd = gnd + ",";
-					gnd = gnd + currentItem.getTextContent();
+					Node nodeGNDURI = subfields.item(i);   					
+					Node nodeGNDPlacenames = gndPlacenames.item(i);
+					
+					
+					if(i>0)gnd = gnd + "#";
+					gnd = gnd + nodeGNDURI.getTextContent()+"@"+nodeGNDPlacenames.getTextContent();
 				}
 				
 				map.setReferences(gnd);
+				
 				System.out.println("GND Ort -> "+ gnd);
 			}
 			
+			
+			
+			subfields = (NodeList) xpath.evaluate("//mods/name[@authority='gnd']/@valueURI", document,XPathConstants.NODESET);
+			NodeList authors = (NodeList) xpath.evaluate("//mods/name[@authority='gnd']/namePart", document,XPathConstants.NODESET);
+
+			
+			if (subfields.getLength() != 0) {
+
+				String gnd="";
+				
+				for (int i = 0; i < subfields.getLength(); i++) {
+					
+					Node nodeGNDAutorURI = subfields.item(i);   					
+					Node nodeGNDAutorName = authors.item(i);
+					
+					
+					if(i>0)gnd = gnd + "#";
+					gnd = gnd + nodeGNDAutorURI.getTextContent()+"@"+nodeGNDAutorName.getTextContent();
+				}
+				
+				map.setAutors(gnd);
+				
+				
+				System.out.println("GND Autor -> "+ gnd);
+			}
 			
 			
 		} catch (MalformedURLException ex) {                   
@@ -304,16 +318,40 @@ public class METS2RDFMuenster {
 			
 		if(map.getReferences()!=null){
 			
-			String[] references =  map.getReferences().split(",");
+			String[] references =  map.getReferences().split("#");
 			
 			for (int i = 0; i < references.length; i++) {
 				
-				rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://purl.org/dc/terms/references> <"+references[i]+"> . \n" ;
-				
+				String[] referencesRecord =  references[i].split("@");			
+				rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://purl.org/dc/terms/references> <"+referencesRecord[0]+"> . \n" ;
+							
+				if(referencesRecord.length>1){					
+					
+					rdfTurtle = rdfTurtle + "<" + referencesRecord[0] + "> <http://d-nb.info/standards/elementset/gnd#preferredNameForThePlaceOrGeographicName> \""+referencesRecord[1]+"\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+					
+				}
+								
 			}
 			
 		}
 				
+		if(map.getAutors()!=null){
+			
+			String[] authors =  map.getAutors().split("#");
+			
+			for (int i = 0; i < authors.length; i++) {
+				
+				String[] authorRecord =  authors[i].split("@");			
+				rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://purl.org/dc/terms/creator> <"+authorRecord[0]+"> . \n" ;
+							
+				if(authorRecord.length>1){					
+					
+					rdfTurtle = rdfTurtle + "<" + authorRecord[0] + "> <http://d-nb.info/standards/elementset/gnd#variantNameForThePerson> \""+authorRecord[1]+"\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
+					
+				}								
+			}			
+		}
+		
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#medium> <http://www.geographicknowledge.de/vocab/maps#Paper> . \n" ;
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;

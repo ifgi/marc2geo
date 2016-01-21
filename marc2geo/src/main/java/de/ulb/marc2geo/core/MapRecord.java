@@ -18,6 +18,7 @@ public class MapRecord {
 	private String description;
 	private String scale;
 	private String references;
+	private String autors;
 
 	public MapRecord() {
 		
@@ -29,6 +30,22 @@ public class MapRecord {
 	
 	
 	
+	public String getAutors() {
+		return autors;
+	}
+
+
+
+
+
+	public void setAutors(String autors) {
+		this.autors = autors;
+	}
+
+
+
+
+
 	public String getReferences() {
 		return references;
 	}
