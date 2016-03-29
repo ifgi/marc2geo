@@ -6,11 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -69,25 +72,28 @@ public class GeoNamesKarten {
 			
 			
 			
-			FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/delete/geonames-istg_matching-karten_OHNE-PLACES.csv"),true);
+			FileOutputStream fileStream = new FileOutputStream(new File("/home/jones/Schreibtisch/geonames-istg_matching-karten.csv"),true);
 			OutputStreamWriter writer = new OutputStreamWriter(fileStream, "UTF8");
 			
 			long matches = 0;
 			
 			while (result.next()) {
 				
-				com.hp.hpl.jena.query.ResultSet coordinates = this.getCoordinatesFromGeoNames(result.getString("Name")); 
+				String decoded = StringEscapeUtils.unescapeHtml4(result.getString("Name").trim());
+				
+				
+				com.hp.hpl.jena.query.ResultSet coordinates = this.getCoordinatesFromGeoNames(decoded); 
 	    		
 				//StringBuffer buffer = new StringBuffer();
 				String csv = "";
 				String stadtNr = result.getString("StadtNr");
-	    		String stadtName = result.getString("Name");
-				
+	    		String stadtName = decoded;
+	    			    		
 				if(!coordinates.hasNext()){
-
+					
 		    		System.out.println(stadtNr+"@"+stadtName+"@NOT FOUND@NOT FOUND");
 		    		csv=csv+stadtNr+"@"+stadtName+"@NOT FOUND@NOT FOUND\n";
-
+		    		
 				}
 				
 		        while (coordinates.hasNext()) {

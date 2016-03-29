@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>org.ini4j</groupId>
 			<artifactId>ini4j</artifactId>
-			<version>0.5.1</version>
+			<version>0.5.1</version>			
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jena</groupId>
@@ -23,6 +23,11 @@
 			<type>pom</type>
 			<version>2.10.0</version>
 		</dependency>
+		<dependency>
+		  <groupId>org.apache.commons</groupId>
+		  <artifactId>commons-lang3</artifactId>
+		  <version>3.4</version>
+  		</dependency>
 	</dependencies>
 
 	<build>
