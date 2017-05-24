@@ -6,13 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import com.hp.hpl.jena.query.Query;
@@ -78,16 +76,11 @@ public class GeoNamesKarten {
 			long matches = 0;
 			
 			while (result.next()) {
-				
-				String decoded = StringEscapeUtils.unescapeHtml4(result.getString("Name").trim());
-				
-				
-				com.hp.hpl.jena.query.ResultSet coordinates = this.getCoordinatesFromGeoNames(decoded); 
-	    		
-				//StringBuffer buffer = new StringBuffer();
-				String csv = "";
+
 				String stadtNr = result.getString("StadtNr");
-	    		String stadtName = decoded;
+				String stadtName = StringEscapeUtils.unescapeHtml4(result.getString("Name").trim());
+				com.hp.hpl.jena.query.ResultSet coordinates = this.getCoordinatesFromGeoNames(stadtName); 
+				String csv = "";
 	    			    		
 				if(!coordinates.hasNext()){
 					
@@ -98,7 +91,7 @@ public class GeoNamesKarten {
 				
 		        while (coordinates.hasNext()) {
 		            
-		        	QuerySolution soln = coordinates.nextSolution();   		
+		        	QuerySolution soln = coordinates.nextSolution();
 		    		String wkt = soln.getLiteral("?wkt").getLexicalForm().toString();
 		    			    		
 		    		if(!wkt.toUpperCase().contains("POINT")){
@@ -107,17 +100,11 @@ public class GeoNamesKarten {
 			    		csv=csv+stadtNr+"@"+stadtName+"@INVALID@INVALID\n";
 		    			
 		    		} else {
+		    			
 		    			matches++;
 		    			System.out.println(stadtNr+"@"+stadtName+"@"+wkt+"@=HYPERLINK(\"http://ifgi.uni-muenster.de/~j_jone02/istg/locator.html?wkt="+wkt+"\")");
 			    		csv=csv+stadtNr+"@"+stadtName+"@"+wkt+"@=HYPERLINK(\"http://ifgi.uni-muenster.de/~j_jone02/istg/locator.html?wkt="+wkt+"\")\n";
 		    		}
-		    		
-//		    		buffer.append("<http://data.uni-muenster.de/context/istg/karten/stadt/"+stadtNr+"> <http://www.opengis.net/ont/geosparql/1.0#hasGeometry> _:GEOMETRY_CITY"+stadtNr+" .\n");
-//		    		buffer.append("_:GEOMETRY_CITY"+stadtNr+ " <http://www.opengis.net/ont/geosparql/1.0#asWKT> '"+ soln.getLiteral("?wkt").getLexicalForm().toString()+"'^^<http://www.opengis.net/ont/geosparql#wktLiteral> .\n");
-//		    		buffer.append("\n");
-		    		
-
-//		    		buffer.append("\n");
 					
 		        }
 		        
@@ -147,13 +134,10 @@ public class GeoNamesKarten {
 	private com.hp.hpl.jena.query.ResultSet getCoordinatesFromGeoNames(String placeName){
 		
 		String SPARQL = "SELECT ?feature ?label ?geometry ?wkt ?historicalName WHERE { " +
-						//"	OPTIONAL {?feature <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://linkedgeodata.org/ontology/City> }. " + 
 						"	?feature a ?type . " +
 						"	?feature <http://www.w3.org/2000/01/rdf-schema#label> ?label . " +
 						"	?feature <http://geovocab.org/geometry#geometry> ?geometry . " +
 						"	?geometry <http://www.opengis.net/ont/geosparql#asWKT> ?wkt  " +
-						//"	FILTER (LANGMATCHES(LANG(?label), '') || LANGMATCHES(LANG(?label), 'de'))" +
-						//"	FILTER (REGEX(STR(?label), '^"+placeName+"$', 'i') || REGEX(STR(?historicalName), '^"+placeName+"$', 'i')  ) " +
 						"	FILTER (REGEX(STR(?label), '^"+placeName+"$')) " +
 						"	FILTER ( ?type = <http://linkedgeodata.org/ontology/City> || " +
 						"			 ?type = <http://linkedgeodata.org/ontology/Town> ) " +
@@ -163,8 +147,7 @@ public class GeoNamesKarten {
 		Query query = QueryFactory.create(SPARQL);
 				
 		QueryExecution qexec = QueryExecutionFactory.sparqlService("http://linkedgeodata.org/sparql", query);
-		com.hp.hpl.jena.query.ResultSet results = qexec.execSelect();
-		
+		com.hp.hpl.jena.query.ResultSet results = qexec.execSelect();	
 		
 		return results;
 		

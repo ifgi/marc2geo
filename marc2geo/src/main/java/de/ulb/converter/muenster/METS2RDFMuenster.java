@@ -161,6 +161,16 @@ public class METS2RDFMuenster {
 			System.out.println("Image -> "+ map.getImage());
 
 
+			subfields = (NodeList) xpath.evaluate("//fileSec/fileGrp[@USE='THUMBS']/file/FLocat/@href", document,XPathConstants.NODESET);
+
+			if (subfields.getLength() != 0) {
+				Node currentItem = subfields.item(0);   
+				map.setThumbnail(currentItem.getTextContent());                                     
+			}
+			
+
+			System.out.println("Image Thumbnail -> "+ map.getThumbnail());
+			
 			subfields = (NodeList) xpath.evaluate("//physicalDescription/extent", document,XPathConstants.NODESET);
 
 
@@ -356,7 +366,8 @@ public class METS2RDFMuenster {
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#digitalImageVersion> <" + map.getImage() + ">. \n" ;
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
-		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;				
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://xmlns.com/foaf/0.1/thumbnail> <" + map.getThumbnail() + "> . \n" ;		
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#hasScale> \"" + map.getScale() + "\"^^<http://www.w3.org/2001/XMLSchema#string>. \n" ;
 		rdfTurtle = rdfTurtle + "<" + map.getURI() + "> <http://purl.org/dc/terms/description> \"" + map.getDescription().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 

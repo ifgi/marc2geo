@@ -13,6 +13,7 @@ public class MapRecord {
 	private String size;
 	private String geometry;
 	private String image;
+	private String thumbnail;
 	private String presentation;
 	private String year;
 	private String description;
@@ -198,6 +199,22 @@ public class MapRecord {
 
 	public void setScale(String scale) {
 		this.scale = scale;
+	}
+
+
+
+
+
+	public String getThumbnail() {
+		return thumbnail;
+	}
+
+
+
+
+
+	public void setThumbnail(String thumbnail) {
+		this.thumbnail = thumbnail;
 	}
 	
 	

@@ -424,6 +424,7 @@ public class DataLoaderGoettingen {
 				result.setImage(currentItem.getTextContent());				
 			}else {
 				result.setImage("https://upload.wikimedia.org/wikipedia/de/c/c9/Uni_G%C3%B6ttingen_Siegel.png");
+				result.setThumbnail("https://upload.wikimedia.org/wikipedia/de/c/c9/Uni_G%C3%B6ttingen_Siegel.png");
 				//logger.warn("No image for map: " + result.getId() + " \"" + result.getTitle() + "\".");
 			}
 
@@ -537,6 +538,7 @@ public class DataLoaderGoettingen {
 			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapSize> \"" + map.getMapSize() + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#title> \"" + map.getTitle().replace("'", "\u0027") + "\"^^<http://www.w3.org/2001/XMLSchema#string> . \n" ;
 			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#presentation> <" + map.getPresentation() + "> . \n" ;
+			SPARQLinsert = SPARQLinsert + "			  <" + map.getURI() + "> <http://xmlns.com/foaf/0.1/thumbnail> <" + map.getThumbnail() + "> . \n" ;		
 			SPARQLinsert = SPARQLinsert + "           <" + map.getURI() + "> <http://www.geographicknowledge.de/vocab/maps#mapsTime> <" + GlobalSettings.getTimeURL() + map.getHT() + "> . \n" ;
 			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/time#Instant> . \n" ;
 			SPARQLinsert = SPARQLinsert + "           <" + GlobalSettings.getTimeURL() + map.getHT() + "> <http://www.w3.org/2001/XMLSchema#gYear> '" + map.getYear() + "'^^<http://www.w3.org/2001/XMLSchema#gYear> .\n" ;

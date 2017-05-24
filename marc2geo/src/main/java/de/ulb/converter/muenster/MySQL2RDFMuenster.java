@@ -32,11 +32,10 @@ import org.xml.sax.SAXException;
 import de.ulb.marc2geo.core.MapRecord;
 import org.apache.log4j.Logger;
 
-public class RDFConverterMuenster {
+public class MySQL2RDFMuenster {
 
 	
-	private static String outputFile ="/home/jones/delete/Muenster/output_muenster_januar2016.nt"; 
-	
+	private static String outputFile ="/home/jones/delete/Muenster/output_muenster_januar2016.nt"; 	
 	private static String logFile ="/home/jones/delete/Muenster/invalid_maps.log";
 	private static String mapURI ="http://lobid.org/resource/";
 	private static String defaultCRS ="http://www.opengis.net/def/crs/EPSG/0/4326";
@@ -47,7 +46,7 @@ public class RDFConverterMuenster {
 	private static Logger logger = Logger.getLogger("RDF Converter-Münster");
 	public static void main(String[] args) {
 	
-		RDFConverterMuenster loader = new RDFConverterMuenster();		
+		MySQL2RDFMuenster loader = new MySQL2RDFMuenster();		
 		ArrayList<MapRecord> maps = new ArrayList<MapRecord>(); 
 		
 		maps = loader.getMaps();
@@ -313,6 +312,7 @@ public class RDFConverterMuenster {
 			expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='c']");
 			nl = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
 
+			
 //			if(nl.getLength()!=0){
 //
 //				expr = xpath.compile("//record/datafield[@tag='255']/subfield[@code='a']");
